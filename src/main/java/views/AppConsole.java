@@ -1,9 +1,9 @@
-package tests;
+package views;
 
 import entities.Evenement;
 import entities.Programme;
-import services.ServiceEvenement;
-import services.ServiceProgramme;
+import services.EvenementService;
+import services.ProgrammeService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,12 +18,12 @@ public class AppConsole {
 
     private final Scanner sc = new Scanner(System.in);
 
-    private final ServiceEvenement se;
-    private final ServiceProgramme sp;
+    private final EvenementService se;
+    private final ProgrammeService sp;
 
     public AppConsole() throws Exception {
-        se = new ServiceEvenement();
-        sp = new ServiceProgramme();
+        se = new EvenementService();
+        sp = new ProgrammeService();
     }
 
     public static void main(String[] args) throws Exception {

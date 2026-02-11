@@ -1,21 +1,22 @@
 package services;
 
 import entities.Programme;
+import interfaces.IProgrammeService;
 import utils.MyDataBase;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceProgramme {
+public class ProgrammeService implements IProgrammeService {
 
     private final Connection cnx;
 
-    public ServiceProgramme() throws SQLException {
+    public ProgrammeService() throws SQLException {
         cnx = MyDataBase.getInstance().getCnx();
     }
 
-    // ===================== CREATE =====================
+    @Override
     public void add(Programme p) throws SQLException {
         String sql = "INSERT INTO programme (event_id, titre, debut, fin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -31,50 +32,7 @@ public class ServiceProgramme {
         }
     }
 
-    // ===================== READ ONE =====================
-    public Programme getOneById(int idProg) throws SQLException {
-        String sql = "SELECT * FROM programme WHERE id_prog=?";
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, idProg);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return null;
-                return map(rs);
-            }
-        }
-    }
-
-    // ===================== READ ALL =====================
-    public List<Programme> getAll() throws SQLException {
-        String sql = "SELECT * FROM programme ORDER BY id_prog DESC";
-        List<Programme> list = new ArrayList<>();
-
-        try (PreparedStatement ps = cnx.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(map(rs));
-            }
-        }
-        return list;
-    }
-
-    // ===================== READ BY EVENT =====================
-    public List<Programme> getByEventId(int eventId) throws SQLException {
-        String sql = "SELECT * FROM programme WHERE event_id=? ORDER BY debut ASC";
-        List<Programme> list = new ArrayList<>();
-
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, eventId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
-            }
-        }
-        return list;
-    }
-
-    // ===================== UPDATE =====================
+    @Override
     public void update(Programme p) throws SQLException {
         String sql = "UPDATE programme SET event_id=?, titre=?, debut=?, fin=? WHERE id_prog=?";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
@@ -87,16 +45,51 @@ public class ServiceProgramme {
         }
     }
 
-    // ===================== DELETE =====================
-    public void delete(int idProg) throws SQLException {
+    @Override
+    public void delete(int id) throws SQLException {
         String sql = "DELETE FROM programme WHERE id_prog=?";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, idProg);
+            ps.setInt(1, id);
             ps.executeUpdate();
         }
     }
 
-    // ===================== MAPPER =====================
+    @Override
+    public List<Programme> getAll() throws SQLException {
+        String sql = "SELECT * FROM programme ORDER BY id_prog DESC";
+        List<Programme> list = new ArrayList<>();
+        try (PreparedStatement ps = cnx.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    @Override
+    public Programme getOneById(int id) throws SQLException {
+        String sql = "SELECT * FROM programme WHERE id_prog=?";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                return map(rs);
+            }
+        }
+    }
+
+    @Override
+    public List<Programme> getByEventId(int eventId) throws SQLException {
+        String sql = "SELECT * FROM programme WHERE event_id=? ORDER BY debut ASC";
+        List<Programme> list = new ArrayList<>();
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, eventId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
     private Programme map(ResultSet rs) throws SQLException {
         Programme p = new Programme();
         p.setIdProg(rs.getInt("id_prog"));
@@ -105,7 +98,6 @@ public class ServiceProgramme {
 
         Timestamp d = rs.getTimestamp("debut");
         Timestamp f = rs.getTimestamp("fin");
-
         p.setDebut(d != null ? d.toLocalDateTime() : null);
         p.setFin(f != null ? f.toLocalDateTime() : null);
 
