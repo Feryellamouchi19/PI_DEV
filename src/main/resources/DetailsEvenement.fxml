@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane styleClass="card" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.DetailsEvenementController">
+
+    <top>
+        <VBox spacing="10">
+            <padding><Insets bottom="10" left="30" right="30" top="20" /></padding>
+         <HBox prefHeight="109.0" prefWidth="677.0">
+            <children>
+               <ImageView fitHeight="96.0" fitWidth="97.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                     <Image url="@images/logo.png" />
+                  </image>
+               </ImageView>
+      
+                        <Label style="-fx-font-size:22px; -fx-font-weight:bold;" text="Détails de l'Événement">
+                  <HBox.margin>
+                     <Insets left="50.0" top="30.0" />
+                  </HBox.margin>
+               </Label>
+            </children>
+         </HBox>
+
+                  <GridPane hgap="12" prefHeight="118.0" prefWidth="528.0" stylesheets="@css/style.css" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="120" />
+                    <ColumnConstraints prefWidth="600" />
+                </columnConstraints>
+
+                      <Label text="Titre :" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <Label fx:id="lblTitre" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                      <Label text="Type :" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <Label fx:id="lblType" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                      <Label text="Lieu :" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <Label fx:id="lblLieu" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                      <Label text="Début :" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <Label fx:id="lblDebut" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                      <Label text="Fin :" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <Label fx:id="lblFin" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                      <Label text="Description :" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                <Label fx:id="lblDescription" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+            <rowConstraints>
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+            </rowConstraints>
+            <VBox.margin>
+               <Insets right="500.0" />
+            </VBox.margin>
+            </GridPane>
+
+            <Label style="-fx-font-size:16px; -fx-font-weight:bold;" text="Programmes" />
+         <ScrollPane prefHeight="200.0" prefWidth="200.0" />
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="tableProg" prefHeight="420" styleClass="card" stylesheets="@css/style.css">
+            <columns>
+                <TableColumn fx:id="colProgId" prefWidth="60" text="ID" />
+                <TableColumn fx:id="colProgTitre" prefWidth="260" text="Titre" />
+                <TableColumn fx:id="colProgDebut" prefWidth="160" text="Début" />
+                <TableColumn fx:id="colProgFin" prefWidth="160" text="Fin" />
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" stylesheets="@css/style.css">
+            <padding><Insets bottom="20" left="30" right="30" top="10" /></padding>
+            <Label fx:id="lblMsg" text="" />
+            <Button onAction="#onAjouterProgramme" styleClass="btn-primary" stylesheets="@css/style.css" text="Ajouter Programme" />
+            <Button onAction="#onSupprimerProgramme" styleClass="btn-primary" stylesheets="@css/style.css" text="Supprimer Programme" />
+            <Button onAction="#onRetour" styleClass="btn-primary" text="Retour" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

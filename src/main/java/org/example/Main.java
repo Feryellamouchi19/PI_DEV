@@ -1,4 +1,4 @@
-package tests;
+package org.example;
 
 import services.EvenementService;
 

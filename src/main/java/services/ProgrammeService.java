@@ -79,12 +79,27 @@ public class ProgrammeService implements IProgrammeService {
 
     @Override
     public List<Programme> getByEventId(int eventId) throws SQLException {
-        String sql = "SELECT * FROM programme WHERE event_id=? ORDER BY debut ASC";
+
+        String sql = "SELECT * FROM programme WHERE event_id = ? ORDER BY debut ASC";
         List<Programme> list = new ArrayList<>();
+
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setInt(1, eventId);
+
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+                while (rs.next()) {
+                    Programme p = new Programme();
+                    p.setIdProg(rs.getInt("id_prog"));
+                    p.setEventId(rs.getInt("event_id"));
+                    p.setTitre(rs.getString("titre"));
+
+                    Timestamp td = rs.getTimestamp("debut");
+                    Timestamp tf = rs.getTimestamp("fin");
+                    p.setDebut(td != null ? td.toLocalDateTime() : null);
+                    p.setFin(tf != null ? tf.toLocalDateTime() : null);
+
+                    list.add(p);
+                }
             }
         }
         return list;
