@@ -35,10 +35,11 @@ public class AjouterEvenementController {
     @FXML
     public void initialize() {
 
+        // Types
         cbType.getItems().setAll("SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
         cbType.setValue("SOIREE");
 
-        // Spinner configs
+        // Spinners
         spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 20));
         spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
         spFinH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 10));
@@ -49,11 +50,11 @@ public class AjouterEvenementController {
         spFinH.setEditable(true);
         spFinM.setEditable(true);
 
-        // Date du jour par défaut
+        // Dates par défaut
         dpDebut.setValue(LocalDate.now());
         dpFin.setValue(LocalDate.now().plusDays(1));
 
-        // Connexion DB
+        // DB
         try {
             service = new EvenementService();
         } catch (SQLException e) {
@@ -61,13 +62,13 @@ public class AjouterEvenementController {
             e.printStackTrace();
         }
 
-        // activer/désactiver date fin selon type
+        // Activer/désactiver date fin selon type
         cbType.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             boolean besoinFin = "CAMPING".equals(newV) || "SEJOUR".equals(newV);
             setFinEnabled(besoinFin);
         });
 
-        // état initial
+        // Etat initial : SOIREE => pas besoin fin
         setFinEnabled(false);
         lblMessage.setText("");
     }
@@ -81,22 +82,25 @@ public class AjouterEvenementController {
             dpFin.setValue(null);
             spFinH.getValueFactory().setValue(0);
             spFinM.getValueFactory().setValue(0);
+        } else {
+            if (dpFin.getValue() == null) dpFin.setValue(dpDebut.getValue().plusDays(1));
         }
     }
 
     @FXML
     private void onAjouterEvenement(ActionEvent event) {
-        lblMessage.getStyleClass().removeAll("success", "error");
-        lblMessage.setText("");
+        clearMessageStyles();
 
         try {
+            // Lire champs
             String titre = safe(txtTitre.getText());
             String desc  = safe(txtDescription.getText());
             String lieu  = safe(txtLieu.getText());
             String type  = cbType.getValue();
 
+            // Validations
             if (titre.isEmpty() || desc.isEmpty() || lieu.isEmpty()) {
-                showError("❌ Remplis titre / description / lieu.");
+                showError("❌ Remplis Titre / Description / Lieu.");
                 return;
             }
 
@@ -130,11 +134,13 @@ public class AjouterEvenementController {
                 }
             }
 
+            // Insert DB
             Evenement e = new Evenement(titre, desc, type, debut, fin, lieu);
             service.add(e);
 
-            showSuccess("✅ Ajouté ! ID = " + e.getIdEvent());
-            // Boîte de dialogue
+            showSuccess("✅ Événement ajouté ! ID = " + e.getIdEvent());
+
+            // Alert Oui/Non
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Ajouter Programme");
             alert.setHeaderText("Événement ajouté avec succès !");
@@ -142,23 +148,15 @@ public class AjouterEvenementController {
 
             ButtonType btnOui = new ButtonType("Oui");
             ButtonType btnNon = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
-
             alert.getButtonTypes().setAll(btnOui, btnNon);
 
             alert.showAndWait().ifPresent(response -> {
                 if (response == btnOui) {
-                    // Aller vers page programme
                     SceneUtil.switchToWithData("/AjouterProgramme.fxml", "Ajouter Programme", e.getIdEvent());
+                } else {
+                    SceneUtil.switchTo("/ListeEvenements.fxml", "Liste des Événements");
                 }
             });
-
-            // ✅ Aller vers la page liste
-            SceneUtil.switchTo("/ListeEvenements.fxml", "Liste Evenements");
-            SceneUtil.switchToWithData(
-                    "/AjouterProgramme.fxml",
-                    "Ajouter Programme",
-                    e.getIdEvent()
-            );
 
         } catch (SQLException ex) {
             showError("❌ Erreur DB (insert)");
@@ -169,20 +167,31 @@ public class AjouterEvenementController {
         }
     }
 
+    @FXML
+    private void onRetour() {
+        SceneUtil.switchTo("/ListeEvenements.fxml", "Liste des Événements");
+    }
+
+    // ===================== UI Helpers =====================
+
+    private void clearMessageStyles() {
+        lblMessage.getStyleClass().removeAll("success", "error");
+        lblMessage.setText("");
+    }
+
     private void showSuccess(String msg) {
         lblMessage.setText(msg);
         lblMessage.getStyleClass().removeAll("error");
-        lblMessage.getStyleClass().add("success");
+        if (!lblMessage.getStyleClass().contains("success")) lblMessage.getStyleClass().add("success");
     }
 
     private void showError(String msg) {
         lblMessage.setText(msg);
         lblMessage.getStyleClass().removeAll("success");
-        lblMessage.getStyleClass().add("error");
+        if (!lblMessage.getStyleClass().contains("error")) lblMessage.getStyleClass().add("error");
     }
 
     private String safe(String s) {
         return s == null ? "" : s.trim();
     }
-
 }

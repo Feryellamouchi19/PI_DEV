@@ -1,4 +1,5 @@
 package interfaces;
 
-public interface DataReceiver {
+public interface DataReceiver<T> {
+    void setData(T data);
 }

@@ -1,157 +1,239 @@
 package controllers;
 
 import entities.Evenement;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 import services.EvenementService;
 
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 public class ListeEvenementsController {
 
-    private final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-    @FXML private TableView<Evenement> table;
-    @FXML private TableColumn<Evenement, Integer> colId;
-    @FXML private TableColumn<Evenement, String> colTitre;
-    @FXML private TableColumn<Evenement, String> colType;
-    @FXML private TableColumn<Evenement, String> colDebut;
-    @FXML private TableColumn<Evenement, String> colFin;
-    @FXML private TableColumn<Evenement, String> colLieu;
-
     @FXML private TextField txtSearch;
-    @FXML private ChoiceBox<String> cbTri;
-    @FXML private ChoiceBox<String> cbTypeFilter;
-    @FXML private Label lblInfo;
+    @FXML private Label lblMsg;
+
+    @FXML private FlowPane flowEvents;
+
+    @FXML private ComboBox<String> cbType;
+    @FXML private DatePicker dpFrom;
+    @FXML private DatePicker dpTo;
+    @FXML private ComboBox<String> cbSort;
 
     private EvenementService service;
-    private ObservableList<Evenement> master = FXCollections.observableArrayList();
+
+    // ✅ sélection
+    private Evenement selectedEvent;
+    private VBox selectedCard;
 
     @FXML
     public void initialize() {
         try {
             service = new EvenementService();
+            initFiltresEtTri();
+            loadAll();
         } catch (SQLException e) {
-            lblInfo.setText("❌ Erreur connexion DB");
+            lblMsg.setText("❌ Erreur connexion DB");
             e.printStackTrace();
+        }
+    }
+
+    private void initFiltresEtTri() {
+        cbType.getItems().setAll("SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
+
+        cbSort.getItems().setAll(
+                "Titre (A→Z)",
+                "Titre (Z→A)",
+                "Date début (↑)",
+                "Date début (↓)"
+        );
+
+        cbType.setValue(null);
+        dpFrom.setValue(null);
+        dpTo.setValue(null);
+        cbSort.setValue(null);
+    }
+
+    private void loadAll() {
+        try {
+            List<Evenement> list = service.getAll();
+            render(list);
+            lblMsg.setText("✅ " + list.size() + " événement(s)");
+        } catch (SQLException e) {
+            lblMsg.setText("❌ Erreur chargement événements");
+            e.printStackTrace();
+        }
+    }
+
+    private void render(List<Evenement> list) {
+        if (flowEvents == null) return;
+
+        flowEvents.getChildren().clear();
+        selectedEvent = null;
+
+        if (selectedCard != null) {
+            selectedCard.getStyleClass().remove("event-card-selected");
+            selectedCard = null;
+        }
+
+        for (Evenement e : list) {
+            VBox card = createEventCard(e);
+            flowEvents.getChildren().add(card);
+        }
+    }
+
+    private VBox createEventCard(Evenement e) {
+        ImageView img = new ImageView();
+        img.setFitWidth(200);
+        img.setFitHeight(150);
+        img.setPreserveRatio(true);
+
+        // ✅ charger l'image de l'event si existe
+        loadEventImage(img, e);
+
+        Label title = new Label(e.getTitre() == null ? "" : e.getTitre());
+        title.getStyleClass().add("subtitle");
+
+        VBox card = new VBox(10, img, title);
+        card.getStyleClass().add("event-card");
+        card.setPrefWidth(220);
+
+        // ✅ un seul handler click
+        card.setOnMouseClicked(ev -> {
+            if (ev.getClickCount() == 2) {
+                SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", e.getIdEvent());
+            } else {
+                selectCard(card, e);
+            }
+        });
+
+        return card;
+    }
+
+    private void selectCard(VBox card, Evenement e) {
+        selectedEvent = e;
+
+        if (selectedCard != null) {
+            selectedCard.getStyleClass().remove("event-card-selected");
+        }
+
+        selectedCard = card;
+        selectedCard.getStyleClass().add("event-card-selected");
+
+        lblMsg.setText("✅ Sélectionné: " + (e.getTitre() == null ? "" : e.getTitre()));
+    }
+
+    @FXML
+    private void onSearch() {
+        String q = txtSearch.getText() == null ? "" : txtSearch.getText().trim();
+
+        if (q.isEmpty()) {
+            loadAll();
             return;
         }
 
-        // Colonnes (sans JavaFX Properties => on utilise des lambdas)
-        colId.setCellValueFactory(data -> new javafx.beans.property.SimpleIntegerProperty(data.getValue().getIdEvent()).asObject());
-        colTitre.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getTitre()));
-        colType.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getType()));
-        colLieu.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getLieu()));
-
-        colDebut.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
-                data.getValue().getDateDebut() == null ? "" : data.getValue().getDateDebut().format(F)
-        ));
-
-        colFin.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
-                data.getValue().getDateFin() == null ? "" : data.getValue().getDateFin().format(F)
-        ));
-
-        // Tri
-        cbTri.getItems().addAll("Date ASC", "Date DESC", "ID DESC");
-        cbTri.setValue("ID DESC");
-
-        // Filtre type
-        cbTypeFilter.getItems().addAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
-        cbTypeFilter.setValue("TOUS");
-
-        // listeners: recherche + tri + filtre
-        txtSearch.textProperty().addListener((obs, o, n) -> appliquer());
-        cbTri.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> appliquer());
-        cbTypeFilter.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> appliquer());
-
-        reload();
-        table.setRowFactory(tv -> {
-            TableRow<Evenement> row = new TableRow<>();
-            row.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !row.isEmpty()) {
-                    Evenement selected = row.getItem();
-                    SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", selected.getIdEvent());
-                }
-            });
-            return row;
-        });
-    }
-
-    private void reload() {
         try {
-            master.setAll(service.getAll());
-            appliquer();
+            List<Evenement> list = service.search(q);
+            render(list);
+            lblMsg.setText("🔎 " + list.size() + " résultat(s)");
         } catch (SQLException e) {
-            lblInfo.setText("❌ Erreur lecture DB");
+            lblMsg.setText("❌ Erreur recherche");
             e.printStackTrace();
         }
     }
 
-    private void appliquer() {
+    @FXML
+    private void onFiltrer() {
+        String q = txtSearch.getText() == null ? "" : txtSearch.getText().trim();
+        String type = cbType.getValue();
+        LocalDate from = dpFrom.getValue();
+        LocalDate to = dpTo.getValue();
+
         try {
-            List<Evenement> list = master;
+            List<Evenement> all = service.getAll();
 
-            // 1) search
-            String k = txtSearch.getText() == null ? "" : txtSearch.getText().trim();
-            if (!k.isEmpty()) {
-                list = service.rechercher(list, k);
+            List<Evenement> filtered = all.stream()
+                    .filter(e -> q.isEmpty()
+                            || containsIgnoreCase(e.getTitre(), q)
+                            || containsIgnoreCase(e.getDescription(), q)
+                            || containsIgnoreCase(e.getLieu(), q))
+                    .filter(e -> type == null || type.isBlank()
+                            || (e.getType() != null && e.getType().trim().equalsIgnoreCase(type.trim())))
+                    .filter(e -> {
+                        if (from == null && to == null) return true;
+                        if (e.getDateDebut() == null) return false;
+
+                        LocalDate d = e.getDateDebut().toLocalDate();
+                        boolean okFrom = (from == null) || !d.isBefore(from);
+                        boolean okTo = (to == null) || !d.isAfter(to);
+                        return okFrom && okTo;
+                    })
+                    .toList();
+
+            String choice = cbSort.getValue();
+            if (choice != null) {
+                filtered = sortList(filtered, choice);
             }
 
-            // 2) filtre type
-            String type = cbTypeFilter.getValue();
-            if (type != null && !type.equals("TOUS")) {
-                list = service.filtrerParType(list, type);
-            }
+            render(filtered);
+            lblMsg.setText("🔎 " + filtered.size() + " résultat(s)");
 
-            // 3) tri
-            String tri = cbTri.getValue();
-            if ("Date ASC".equals(tri)) list = service.trierParDateAsc(list);
-            else if ("Date DESC".equals(tri)) list = service.trierParDateDesc(list);
-            else { // ID DESC
-                list = list.stream()
-                        .sorted((a, b) -> Integer.compare(b.getIdEvent(), a.getIdEvent()))
-                        .toList();
-            }
-
-            table.setItems(FXCollections.observableArrayList(list));
-            lblInfo.setText("✅ " + list.size() + " événement(s) affiché(s)");
-
-        } catch (Exception e) {
-            lblInfo.setText("❌ Erreur filtre/tri");
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            lblMsg.setText("❌ Erreur filtre");
+            ex.printStackTrace();
         }
     }
 
     @FXML
-    private void onReload() {
-        reload();
+    private void onTrier() {
+        onFiltrer();
+    }
+
+    private List<Evenement> sortList(List<Evenement> list, String choice) {
+        Comparator<Evenement> byTitre = Comparator.comparing(
+                e -> e.getTitre() == null ? "" : e.getTitre().toLowerCase()
+        );
+
+        Comparator<Evenement> byDateDebut = Comparator.comparing(
+                e -> e.getDateDebut() == null ? LocalDateTime.MIN : e.getDateDebut()
+        );
+
+        return switch (choice) {
+            case "Titre (A→Z)" -> list.stream().sorted(byTitre).toList();
+            case "Titre (Z→A)" -> list.stream().sorted(byTitre.reversed()).toList();
+            case "Date début (↑)" -> list.stream().sorted(byDateDebut).toList();
+            case "Date début (↓)" -> list.stream().sorted(byDateDebut.reversed()).toList();
+            default -> list;
+        };
     }
 
     @FXML
-    private void onDeleteSelected() {
-        Evenement sel = table.getSelectionModel().getSelectedItem();
-        if (sel == null) {
-            lblInfo.setText("❌ Sélectionne un événement.");
+    private void onSupprimer() {
+        if (selectedEvent == null) {
+            lblMsg.setText("❌ Sélectionne un événement à supprimer (clic sur une carte)");
             return;
         }
 
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Confirmation");
-        a.setHeaderText("Supprimer l'événement ID=" + sel.getIdEvent() + " ?");
-        a.setContentText(sel.getTitre());
+        a.setHeaderText("Supprimer cet événement ?");
+        a.setContentText(selectedEvent.getTitre());
 
         a.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 try {
-                    service.delete(sel.getIdEvent());
-                    lblInfo.setText("✅ Supprimé !");
-                    reload();
+                    service.delete(selectedEvent.getIdEvent());
+                    lblMsg.setText("✅ Événement supprimé");
+                    loadAll();
                 } catch (SQLException e) {
-                    lblInfo.setText("❌ Erreur suppression DB");
+                    lblMsg.setText("❌ Erreur suppression");
                     e.printStackTrace();
                 }
             }
@@ -159,7 +241,57 @@ public class ListeEvenementsController {
     }
 
     @FXML
+    private void onReset() {
+        txtSearch.clear();
+        initFiltresEtTri();
+        loadAll();
+    }
+
+    @FXML
     private void onGoAjouter() {
-        SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Evenement");
+        SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Événement");
+    }
+
+    @FXML
+    private void onRetour() {
+        SceneUtil.switchTo("/Home.fxml", "Home");
+    }
+
+    // ===== helpers =====
+    private boolean containsIgnoreCase(String src, String q) {
+        if (src == null || q == null) return false;
+        return src.toLowerCase().contains(q.toLowerCase());
+    }
+
+    // ✅ charge image depuis DB (resources / http / file)
+    private void loadEventImage(ImageView img, Evenement e) {
+        try {
+            String path = (e == null) ? null : e.getImage();
+
+            // fallback
+            if (path == null || path.isBlank()) {
+                img.setImage(new Image(getClass().getResourceAsStream("/images/logo.png")));
+                return;
+            }
+
+            // resource path ex: "images/events/fabrika.png"
+            if (!path.startsWith("http") && !path.matches("^[A-Za-z]:.*")) {
+                if (!path.startsWith("/")) path = "/" + path;
+                img.setImage(new Image(getClass().getResourceAsStream(path)));
+                return;
+            }
+
+            // http url
+            if (path.startsWith("http")) {
+                img.setImage(new Image(path, true));
+                return;
+            }
+
+            // local file Windows
+            img.setImage(new Image("file:" + path));
+
+        } catch (Exception ex) {
+            img.setImage(new Image(getClass().getResourceAsStream("/images/logo.png")));
+        }
     }
 }

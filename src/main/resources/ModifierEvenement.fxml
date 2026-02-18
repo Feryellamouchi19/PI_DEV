@@ -1,14 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
+<BorderPane prefHeight="650.0" prefWidth="900.0" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ModifierEvenementController">
 
-</AnchorPane>
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets bottom="10" left="30" right="30" top="20" />
+            </padding>
+         <HBox prefHeight="100.0" prefWidth="200.0">
+            <children>
+               <ImageView fitHeight="116.0" fitWidth="130.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                     <Image url="@images/logo.png" />
+                  </image>
+               </ImageView>
+      
+                  <Label styleClass="title" text="Modifier Événement">
+                      <font>
+                          <Font size="26" />
+                      </font>
+                  <HBox.margin>
+                     <Insets left="50.0" top="30.0" />
+                  </HBox.margin>
+                  </Label>
+            </children>
+         </HBox>
+
+            <Label fx:id="lblMsg" text="" />
+        </VBox>
+    </top>
+
+    <center>
+        <VBox prefHeight="514.0" prefWidth="900.0" spacing="14" styleClass="card">
+            <padding>
+                <Insets bottom="10" left="30" right="30" top="10" />
+            </padding>
+
+            <GridPane hgap="12" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="140" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                </columnConstraints>
+
+                <Label styleClass="text-field" text="Titre:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <TextField fx:id="txtTitre" styleClass="choice-box" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                <Label styleClass="text-field" text="Type:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <ComboBox fx:id="cbType" promptText="Type" styleClass="choice-box" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                <Label styleClass="text-field" text="Lieu:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <TextField fx:id="txtLieu" styleClass="card" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                <Label styleClass="text-field" text="Début:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <DatePicker fx:id="dpDebut" styleClass="choice-box" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                <Label styleClass="text-field" text="Heure début (HH:mm):" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <TextField fx:id="txtHeureDebut" promptText="10:00" styleClass="card" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                <Label styleClass="text-field" text="Fin:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                <DatePicker fx:id="dpFin" styleClass="choice-box" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                <Label styleClass="text-field" text="Heure fin (HH:mm):" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                <TextField fx:id="txtHeureFin" promptText="18:00" styleClass="card" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+
+                <Label styleClass="text-field" text="Description:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                <TextArea fx:id="txtDescription" prefRowCount="4" styleClass="card" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+            <rowConstraints>
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+            </rowConstraints>
+            </GridPane>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button onAction="#onSave" styleClass="btn-primary" text="Enregistrer" />
+                <Button onAction="#onCancel" styleClass="btn-primary" text="Annuler" />
+            </HBox>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin>
+
+        </VBox>
+    </center>
+
+</BorderPane>

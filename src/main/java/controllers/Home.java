@@ -7,8 +7,8 @@ public class Home extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        SceneUtil.setStage(primaryStage);
-        SceneUtil.switchTo("/ListeEvenements.fxml", "Liste Evenements");
+        SceneUtil.init(primaryStage); // ✅ obligatoire
+        SceneUtil.switchTo("/ListeEvenements.fxml", "Liste des Événements");
     }
 
     public static void main(String[] args) {

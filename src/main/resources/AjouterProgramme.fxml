@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="500" prefWidth="600" spacing="15" styleClass="card" stylesheets="@css/style.css" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="controllers.AjouterProgrammeController">
+<VBox alignment="TOP_CENTER" prefHeight="496.0" prefWidth="548.0" spacing="15" styleClass="card" stylesheets="@css/style.css" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="controllers.AjouterProgrammeController">
 
     <padding>
         <Insets bottom="20" left="30" right="30" top="20" />
