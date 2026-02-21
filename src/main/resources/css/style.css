@@ -1,36 +1,43 @@
 /* ============================================
-   PI_DEV - Style PRO (Events)
+   PI_DEV - EVENTS UI (Dark / Glass / Premium)
    JavaFX + SceneBuilder friendly
    ============================================ */
 
 /* ---------- Theme tokens ---------- */
-.root {
+.root{
     -fx-font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
     -fx-font-size: 13px;
-    -fx-background-color: #F6F8FC;
 
-    /* palette */
-    -app-bg: #F6F8FC;
-    -card: #FFFFFF;
-    -text: #0F172A;
-    -muted: #64748B;
-    -border: #E2E8F0;
+    /* Dark background */
+    -app-bg: #0B1220;
+    -overlay: rgba(10, 15, 25, 0.55);
 
-    /* primary = jaune */
+    /* Glass surfaces */
+    -glass: rgba(255,255,255,0.08);
+    -glass-strong: rgba(255,255,255,0.12);
+    -stroke: rgba(255,255,255,0.14);
+
+    /* Text */
+    -text: #E5E7EB;
+    -muted: rgba(229,231,235,0.72);
+
+    /* Primary (yellow) */
     -primary: #FFC107;
     -primary-hover: #FFB300;
     -primary-pressed: #FFA000;
 
-    /* accents */
-    -focus: rgba(59,130,246,0.55);
+    /* Focus */
+    -focus: rgba(59,130,246,0.70);
 
-    /* danger */
-    -danger: #DC3545;
-    -danger-hover: #C82333;
+    /* Danger */
+    -danger: #EF4444;
+    -danger-hover: #DC2626;
 
-    /* shadow */
-    -shadow1: rgba(15, 23, 42, 0.08);
-    -shadow2: rgba(15, 23, 42, 0.14);
+    /* Shadows */
+    -shadow1: rgba(0,0,0,0.35);
+    -shadow2: rgba(0,0,0,0.55);
+
+    -fx-background-color: -app-bg;
 }
 
 /* Background for containers */
@@ -38,43 +45,94 @@
     -fx-background-color: transparent;
 }
 
-/* ---------- Labels ---------- */
-.label {
-    -fx-text-fill: -text;
+/* ---------- Background helpers ---------- */
+/* Utilise sur un StackPane derrière tout */
+.bg-overlay{
+    -fx-background-color: -overlay;
 }
 
-.title {
+/* ---------- Labels ---------- */
+.label { -fx-text-fill: -text; }
+
+.title{
     -fx-font-size: 26px;
     -fx-font-weight: 800;
     -fx-text-fill: -text;
 }
 
-.subtitle {
+.subtitle{
     -fx-font-size: 13px;
     -fx-text-fill: -muted;
 }
 
-/* Message label helpers */
 .msg { -fx-text-fill: -muted; -fx-font-weight: 600; }
-.msg-ok { -fx-text-fill: #166534; -fx-font-weight: 700; }
-.msg-error { -fx-text-fill: #B91C1C; -fx-font-weight: 700; }
+.msg-ok { -fx-text-fill: #22C55E; -fx-font-weight: 800; }
+.msg-error { -fx-text-fill: #F87171; -fx-font-weight: 800; }
 
-/* ---------- Inputs ---------- */
+/* ---------- Glass panels / cards ---------- */
+.panel{
+    -fx-background-color: -glass;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: -stroke;
+    -fx-border-width: 1;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, -shadow2, 26, 0.30, 0, 10);
+}
+
+.event-card{
+    -fx-background-color: -glass;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: -stroke;
+    -fx-border-width: 1;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, -shadow1, 18, 0.28, 0, 8);
+}
+
+.event-card:hover{
+    -fx-background-color: -glass-strong;
+    -fx-border-color: rgba(255,255,255,0.22);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.32, 0, 12);
+}
+
+.event-card-selected{
+    -fx-border-color: -focus;
+    -fx-border-width: 1.6;
+    -fx-border-radius: 18;
+}
+
+/* ---------- Badges (Type) ---------- */
+.badge{
+    -fx-background-radius: 999;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0B1220;
+    -fx-background-color: -primary;
+}
+
+.badge-green{ -fx-background-color: #22C55E; -fx-text-fill: #052E16; }
+.badge-blue{  -fx-background-color: #60A5FA; -fx-text-fill: #0B1220; }
+.badge-purple{ -fx-background-color: #A78BFA; -fx-text-fill: #0B1220; }
+
+/* ---------- Inputs (Glass) ---------- */
 .text-field,
 .combo-box,
 .date-picker,
-.text-area {
-    -fx-background-color: -card;
+.text-area{
+    -fx-background-color: rgba(255,255,255,0.06);
     -fx-background-radius: 14;
     -fx-border-radius: 14;
-    -fx-border-color: -border;
+    -fx-border-color: rgba(255,255,255,0.14);
     -fx-border-width: 1;
     -fx-padding: 10 12 10 12;
     -fx-text-fill: -text;
-    -fx-effect: dropshadow(gaussian, -shadow1, 14, 0.25, 0, 4);
+    -fx-prompt-text-fill: rgba(229,231,235,0.45);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.25, 0, 6);
 }
 
-.text-area {
+.text-area{
     -fx-padding: 10;
 }
 
@@ -82,119 +140,131 @@
 .text-field:focused,
 .combo-box:focused,
 .date-picker:focused,
-.text-area:focused {
+.text-area:focused{
     -fx-border-color: -focus;
-    -fx-border-width: 1.2;
-    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.18), 16, 0.30, 0, 5);
-}
-
-/* Prompt text */
-.text-field:empty,
-.text-area:empty {
-    -fx-prompt-text-fill: rgba(100,116,139,0.75);
+    -fx-border-width: 1.4;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.22), 18, 0.30, 0, 8);
 }
 
 /* ComboBox arrow button */
-.combo-box .arrow-button { -fx-background-color: transparent; }
-.combo-box .arrow { -fx-background-color: -muted; }
+.combo-box .arrow-button{ -fx-background-color: transparent; }
+.combo-box .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
 
 /* DatePicker arrow button */
-.date-picker .arrow-button { -fx-background-color: transparent; }
-.date-picker .arrow-button .arrow { -fx-background-color: -muted; }
+.date-picker .arrow-button{ -fx-background-color: transparent; }
+.date-picker .arrow-button .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
 
 /* ---------- Buttons ---------- */
-.button {
+.button{
     -fx-cursor: hand;
-    -fx-font-weight: 800;
+    -fx-font-weight: 900;
     -fx-background-radius: 14;
     -fx-border-radius: 14;
     -fx-padding: 10 18;
 }
 
-/* Yellow primary */
-.btn-primary {
+/* Primary yellow */
+.btn-primary{
     -fx-background-color: -primary;
     -fx-text-fill: #111827;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 12, 0.28, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 14, 0.28, 0, 6);
 }
 
-.btn-primary:hover { -fx-background-color: -primary-hover; }
-
-.btn-primary:pressed {
+.btn-primary:hover{ -fx-background-color: -primary-hover; }
+.btn-primary:pressed{
     -fx-background-color: -primary-pressed;
     -fx-translate-y: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 8, 0.22, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0.20, 0, 4);
+}
+
+/* Secondary dark */
+.btn-secondary{
+    -fx-background-color: rgba(255,255,255,0.10);
+    -fx-text-fill: -text;
+    -fx-border-color: rgba(255,255,255,0.16);
+    -fx-border-width: 1;
+}
+
+.btn-secondary:hover{
+    -fx-background-color: rgba(255,255,255,0.14);
 }
 
 /* Danger */
-.btn-danger {
+.btn-danger{
     -fx-background-color: -danger;
     -fx-text-fill: white;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 12, 0.28, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 14, 0.28, 0, 6);
 }
+.btn-danger:hover{ -fx-background-color: -danger-hover; }
+.btn-danger:pressed{ -fx-translate-y: 1; }
 
-.btn-danger:hover { -fx-background-color: -danger-hover; }
-.btn-danger:pressed { -fx-translate-y: 1; }
-
-.button:disabled {
+.button:disabled{
     -fx-opacity: 0.55;
     -fx-cursor: default;
 }
 
-/* ---------- Cards ---------- */
-.panel {
-    -fx-background-color: -card;
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-    -fx-border-color: rgba(226,232,240,0.9);
-    -fx-border-width: 1;
-    -fx-padding: 18;
-    -fx-effect: dropshadow(gaussian, -shadow2, 22, 0.28, 0, 6);
-}
-
-.event-card {
-    -fx-background-color: -card;
-    -fx-background-radius: 16;
-    -fx-border-radius: 16;
-    -fx-border-color: rgba(226,232,240,0.9);
-    -fx-border-width: 1;
-    -fx-padding: 14;
-    -fx-effect: dropshadow(gaussian, -shadow2, 18, 0.26, 0, 5);
-}
-
-.event-card:hover {
-    -fx-border-color: rgba(59,130,246,0.22);
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 22, 0.30, 0, 8);
-}
-
-.event-card-selected {
-    -fx-border-color: rgba(59,130,246,0.55);
-    -fx-border-width: 2;
-    -fx-border-radius: 16;
-}
-
-/* =========================
-   FIX ComboBox Dropdown
-   ========================= */
-
-.combo-box-popup .list-view {
-    -fx-background-color: #FFFFFF;
+/* ---------- ComboBox / DatePicker popup (dark, readable) ---------- */
+.combo-box-popup .list-view{
+    -fx-background-color: rgba(15,23,42,0.92);
     -fx-background-radius: 12;
     -fx-border-radius: 12;
-    -fx-border-color: #E2E8F0;
+    -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.14), 18, 0.28, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 22, 0.30, 0, 10);
 }
 
-.combo-box-popup .list-cell {
-    -fx-background-color: #FFFFFF;
-    -fx-text-fill: #0F172A;
+.combo-box-popup .list-cell{
+    -fx-background-color: transparent;
+    -fx-text-fill: #E5E7EB;
 }
 
-.combo-box-popup .list-cell:hover {
-    -fx-background-color: #F1F5F9;
+.combo-box-popup .list-cell:hover{
+    -fx-background-color: rgba(255,255,255,0.08);
 }
 
-.combo-box-popup .list-cell:filled:selected {
-    -fx-background-color: #E2E8F0;
+.combo-box-popup .list-cell:filled:selected{
+    -fx-background-color: rgba(255,193,7,0.22);
+    -fx-text-fill: #FFF7D1;
+}
+
+/* DatePicker calendar popup */
+.date-picker-popup{
+    -fx-background-color: rgba(15,23,42,0.94);
+    -fx-border-color: rgba(255,255,255,0.16);
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 24, 0.30, 0, 12);
+}
+
+.date-picker-popup .month-year-pane{
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.date-picker-popup .day-cell{
+    -fx-text-fill: #E5E7EB;
+}
+
+.date-picker-popup .day-cell:hover{
+    -fx-background-color: rgba(255,255,255,0.10);
+}
+
+.date-picker-popup .day-cell:selected{
+    -fx-background-color: rgba(255,193,7,0.35);
+    -fx-text-fill: #FFF7D1;
+}
+
+/* ---------- ScrollBar (optional but nice) ---------- */
+.scroll-bar:vertical .track,
+.scroll-bar:horizontal .track{
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 999;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb{
+    -fx-background-color: rgba(255,255,255,0.16);
+    -fx-background-radius: 999;
+}
+.scroll-bar:vertical .thumb:hover,
+.scroll-bar:horizontal .thumb:hover{
+    -fx-background-color: rgba(255,255,255,0.22);
 }
