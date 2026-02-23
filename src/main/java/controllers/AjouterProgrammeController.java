@@ -1,5 +1,4 @@
 package controllers;
-import interfaces.DataReceiver;
 
 import entities.Evenement;
 import entities.Programme;
@@ -18,7 +17,6 @@ import java.time.LocalTime;
 public class AjouterProgrammeController implements DataReceiver<Integer> {
 
     @FXML private Label lblEventInfo;
-
     @FXML private TextField txtTitre;
 
     @FXML private DatePicker dpDebut;
@@ -31,20 +29,20 @@ public class AjouterProgrammeController implements DataReceiver<Integer> {
 
     @FXML private Label lblMessage;
 
-    private ProgrammeService programmeService;
-    private EvenementService evenementService;
+    private final ProgrammeService programmeService = new ProgrammeService();
+    private final EvenementService evenementService = new EvenementService();
 
-    private int idEvent; // ✅ reçu depuis SceneUtil
+    private int idEvent = 0;
 
     @Override
     public void setData(Integer data) {
-        this.idEvent = data;
+        this.idEvent = (data == null) ? 0 : data;
         chargerInfosEvenement();
     }
 
     @FXML
     public void initialize() {
-        // spinners
+
         spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 9));
         spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
         spFinH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 10));
@@ -58,71 +56,97 @@ public class AjouterProgrammeController implements DataReceiver<Integer> {
         dpDebut.setValue(LocalDate.now());
         dpFin.setValue(LocalDate.now());
 
-        try {
-            programmeService = new ProgrammeService();
-            evenementService = new EvenementService();
-        } catch (SQLException e) {
-            showError("❌ Erreur connexion DB");
-            e.printStackTrace();
-        }
-
         lblMessage.setText("");
+        lblEventInfo.setText("—");
     }
 
     private void chargerInfosEvenement() {
-        try {
-            Evenement e = evenementService.getOneById(idEvent);
-            if (e != null) {
-                lblEventInfo.setText("Event #" + e.getIdEvent() + " : " + e.getTitre() + " (" + e.getType() + ")");
-            } else {
-                lblEventInfo.setText("⚠️ Événement introuvable (id=" + idEvent + ")");
-            }
-        } catch (SQLException ex) {
-            lblEventInfo.setText("❌ Erreur chargement événement");
-            ex.printStackTrace();
+        if (idEvent <= 0) {
+            lblEventInfo.setText("⚠️ Événement non sélectionné");
+            return;
         }
+
+        Evenement e = evenementService.getOneById(idEvent);
+
+        if (e == null) {
+            lblEventInfo.setText("⚠️ Événement introuvable");
+            return;
+        }
+
+        // ✅ Sans ID (titre + type)
+        lblEventInfo.setText(safe(e.getTitre()) + " (" + safe(e.getType()) + ")");
     }
 
     @FXML
     private void onAjouterProgramme(ActionEvent event) {
-        lblMessage.setText("");
+
+        if (idEvent <= 0) {
+            showError("❌ Aucun événement sélectionné.");
+            return;
+        }
+
+        String titre = safe(txtTitre.getText());
+        if (titre.isEmpty()) {
+            showError("❌ Titre programme obligatoire.");
+            return;
+        }
+        if (titre.length() < 2) {
+            showError("❌ Titre trop court (min 2).");
+            return;
+        }
+
+        if (dpDebut.getValue() == null || dpFin.getValue() == null) {
+            showError("❌ Choisis date début et date fin.");
+            return;
+        }
+
+        LocalDateTime debut = LocalDateTime.of(
+                dpDebut.getValue(),
+                LocalTime.of(spDebutH.getValue(), spDebutM.getValue())
+        );
+
+        LocalDateTime fin = LocalDateTime.of(
+                dpFin.getValue(),
+                LocalTime.of(spFinH.getValue(), spFinM.getValue())
+        );
+
+        if (!fin.isAfter(debut)) {
+            showError("❌ Fin doit être après début.");
+            return;
+        }
+
+        // ✅ CONTRÔLE CHEVAUCHEMENT
+        try {
+            if (programmeService.existsOverlap(idEvent, debut, fin)) {
+
+                Programme overlap = programmeService.getFirstOverlap(idEvent, debut, fin);
+
+                if (overlap != null && overlap.getDebut() != null && overlap.getFin() != null) {
+                    showError("❌ Conflit: un programme existe déjà entre "
+                            + overlap.getDebut().toLocalTime() + " et " + overlap.getFin().toLocalTime());
+                } else {
+                    showError("❌ Conflit: un programme existe déjà dans ce créneau.");
+                }
+                return;
+            }
+        } catch (SQLException ex) {
+            showError("❌ Erreur DB (vérif chevauchement)");
+            ex.printStackTrace();
+            return;
+        }
+
+        Programme p = new Programme();
+        p.setEventId(idEvent);
+        p.setTitre(titre);
+        p.setDebut(debut);
+        p.setFin(fin);
 
         try {
-            String titre = safe(txtTitre.getText());
-            if (titre.isEmpty()) {
-                showError("❌ Titre programme obligatoire.");
-                return;
-            }
-
-            if (dpDebut.getValue() == null || dpFin.getValue() == null) {
-                showError("❌ Choisis date début et date fin.");
-                return;
-            }
-
-            LocalDateTime debut = LocalDateTime.of(
-                    dpDebut.getValue(),
-                    LocalTime.of(spDebutH.getValue(), spDebutM.getValue())
-            );
-
-            LocalDateTime fin = LocalDateTime.of(
-                    dpFin.getValue(),
-                    LocalTime.of(spFinH.getValue(), spFinM.getValue())
-            );
-
-            if (!fin.isAfter(debut)) {
-                showError("❌ Fin doit être après début.");
-                return;
-            }
-
-            Programme p = new Programme(idEvent, titre, debut, fin);
             programmeService.add(p);
-
-            showSuccess("✅ Programme ajouté ! ID=" + p.getIdProg());
-
+            showSuccess("✅ Programme ajouté !");
             txtTitre.clear();
             dpDebut.setValue(LocalDate.now());
             dpFin.setValue(LocalDate.now());
-
         } catch (SQLException ex) {
             showError("❌ Erreur DB (insert programme)");
             ex.printStackTrace();
@@ -136,13 +160,13 @@ public class AjouterProgrammeController implements DataReceiver<Integer> {
 
     private void showSuccess(String msg) {
         lblMessage.setText(msg);
-        lblMessage.getStyleClass().removeAll("error");
+        lblMessage.getStyleClass().removeAll("error", "success");
         lblMessage.getStyleClass().add("success");
     }
 
     private void showError(String msg) {
         lblMessage.setText(msg);
-        lblMessage.getStyleClass().removeAll("success");
+        lblMessage.getStyleClass().removeAll("success", "error");
         lblMessage.getStyleClass().add("error");
     }
 

@@ -1,181 +1,145 @@
 package services;
 
 import entities.Evenement;
-import interfaces.IEvenementService;
 import utils.MyDataBase;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class EvenementService implements IEvenementService {
+public class EvenementService {
 
     private final Connection cnx;
 
-    public EvenementService() throws SQLException {
+    public EvenementService() {
         cnx = MyDataBase.getInstance().getCnx();
-        if (cnx == null) {
-            throw new SQLException("Connexion DB null (cnx=null). Vérifie MySQL et MyDataBase.");
-        }
     }
 
-    @Override
-    public void add(Evenement e) throws SQLException {
-        String sql = "INSERT INTO evenement (titre, description, type, date_debut, date_fin, lieu, image) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public void add(Evenement e) {
+        String sql = """
+            INSERT INTO evenement (titre, description, type, date_debut, date_fin, lieu, image)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """;
 
         try (PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, e.getTitre());
             ps.setString(2, e.getDescription());
             ps.setString(3, e.getType());
 
-            if (e.getDateDebut() == null) ps.setNull(4, Types.TIMESTAMP);
-            else ps.setTimestamp(4, Timestamp.valueOf(e.getDateDebut()));
+            if (e.getDateDebut() != null) ps.setTimestamp(4, Timestamp.valueOf(e.getDateDebut()));
+            else ps.setNull(4, Types.TIMESTAMP);
 
-            if (e.getDateFin() == null) ps.setNull(5, Types.TIMESTAMP);
-            else ps.setTimestamp(5, Timestamp.valueOf(e.getDateFin()));
+            if (e.getDateFin() != null) ps.setTimestamp(5, Timestamp.valueOf(e.getDateFin()));
+            else ps.setNull(5, Types.TIMESTAMP);
 
             ps.setString(6, e.getLieu());
-
-            // image (nullable)
-            if (e.getImage() == null || e.getImage().isBlank()) ps.setNull(7, Types.VARCHAR);
-            else ps.setString(7, e.getImage());
+            ps.setString(7, e.getImage());
 
             ps.executeUpdate();
 
+            // ✅ récupérer l'ID généré
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) e.setIdEvent(rs.getInt(1));
+                if (rs.next()) {
+                    e.setIdEvent(rs.getInt(1));
+                }
             }
+
+        } catch (SQLException ex) {
+            System.out.println("❌ EvenementService.add()");
+            ex.printStackTrace();
         }
     }
 
-    @Override
-    public void update(Evenement e) throws SQLException {
-        String sql = "UPDATE evenement SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, image=? " +
-                "WHERE id_event=?";
-
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setString(1, e.getTitre());
-            ps.setString(2, e.getDescription());
-            ps.setString(3, e.getType());
-
-            if (e.getDateDebut() == null) ps.setNull(4, Types.TIMESTAMP);
-            else ps.setTimestamp(4, Timestamp.valueOf(e.getDateDebut()));
-
-            if (e.getDateFin() == null) ps.setNull(5, Types.TIMESTAMP);
-            else ps.setTimestamp(5, Timestamp.valueOf(e.getDateFin()));
-
-            ps.setString(6, e.getLieu());
-
-            // image (nullable)
-            if (e.getImage() == null || e.getImage().isBlank()) ps.setNull(7, Types.VARCHAR);
-            else ps.setString(7, e.getImage());
-
-            ps.setInt(8, e.getIdEvent());
-
-            ps.executeUpdate();
-        }
-    }
-
-    @Override
-    public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM evenement WHERE id_event=?";
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        }
-    }
-
-    @Override
-    public List<Evenement> getAll() throws SQLException {
-        String sql = "SELECT * FROM evenement ORDER BY id_event DESC";
+    public List<Evenement> getAll() {
         List<Evenement> list = new ArrayList<>();
+
+        String sql = """
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image
+            FROM evenement
+            ORDER BY id_event DESC
+        """;
+
         try (PreparedStatement ps = cnx.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+
+        } catch (SQLException ex) {
+            System.out.println("❌ EvenementService.getAll()");
+            ex.printStackTrace();
         }
+
         return list;
     }
 
-    @Override
-    public Evenement getOneById(int id) throws SQLException {
-        String sql = "SELECT * FROM evenement WHERE id_event=?";
+    public Evenement getOneById(int idEvent) {
+        String sql = """
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image
+            FROM evenement
+            WHERE id_event = ?
+        """;
+
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setInt(1, id);
+            ps.setInt(1, idEvent);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) return null;
                 return map(rs);
             }
+
+        } catch (SQLException ex) {
+            System.out.println("❌ EvenementService.getOneById()");
+            ex.printStackTrace();
+            return null;
         }
     }
 
-    // ✅ Search SQL
-    public List<Evenement> search(String keyword) throws SQLException {
-        String k = (keyword == null) ? "" : keyword.toLowerCase().trim();
-
+    public void update(Evenement e) {
         String sql = """
-            SELECT * FROM evenement
-            WHERE LOWER(titre) LIKE ?
-               OR LOWER(description) LIKE ?
-               OR LOWER(lieu) LIKE ?
-            ORDER BY id_event DESC
+            UPDATE evenement
+            SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, image=?
+            WHERE id_event=?
         """;
 
-        List<Evenement> list = new ArrayList<>();
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            String like = "%" + k + "%";
-            ps.setString(1, like);
-            ps.setString(2, like);
-            ps.setString(3, like);
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
-            }
+            ps.setString(1, e.getTitre());
+            ps.setString(2, e.getDescription());
+            ps.setString(3, e.getType());
+
+            if (e.getDateDebut() != null) ps.setTimestamp(4, Timestamp.valueOf(e.getDateDebut()));
+            else ps.setNull(4, Types.TIMESTAMP);
+
+            if (e.getDateFin() != null) ps.setTimestamp(5, Timestamp.valueOf(e.getDateFin()));
+            else ps.setNull(5, Types.TIMESTAMP);
+
+            ps.setString(6, e.getLieu());
+            ps.setString(7, e.getImage());
+            ps.setInt(8, e.getIdEvent());
+
+            ps.executeUpdate();
+
+        } catch (SQLException ex) {
+            System.out.println("❌ EvenementService.update()");
+            ex.printStackTrace();
         }
-        return list;
     }
 
-    // ===== Streams =====
-    @Override
-    public List<Evenement> rechercher(List<Evenement> events, String keyword) {
-        String k = safe(keyword);
-        return events.stream()
-                .filter(e -> safe(e.getTitre()).contains(k)
-                        || safe(e.getDescription()).contains(k)
-                        || safe(e.getLieu()).contains(k))
-                .toList();
+    public void delete(int idEvent) {
+        String sql = "DELETE FROM evenement WHERE id_event=?";
+
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, idEvent);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.out.println("❌ EvenementService.delete()");
+            ex.printStackTrace();
+        }
     }
 
-    @Override
-    public List<Evenement> filtrerParType(List<Evenement> events, String type) {
-        String t = safeUpper(type);
-        return events.stream()
-                .filter(e -> safeUpper(e.getType()).equals(t))
-                .toList();
-    }
-
-    @Override
-    public List<Evenement> filtrerParLieu(List<Evenement> events, String keyword) {
-        String k = safe(keyword);
-        return events.stream()
-                .filter(e -> safe(e.getLieu()).contains(k))
-                .toList();
-    }
-
-    @Override
-    public List<Evenement> trierParDateAsc(List<Evenement> events) {
-        return events.stream()
-                .sorted(Comparator.comparing(Evenement::getDateDebut, Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
-    }
-
-    @Override
-    public List<Evenement> trierParDateDesc(List<Evenement> events) {
-        return events.stream()
-                .sorted(Comparator.comparing(Evenement::getDateDebut, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .toList();
-    }
-
-    // ===== helpers =====
     private Evenement map(ResultSet rs) throws SQLException {
         Evenement e = new Evenement();
         e.setIdEvent(rs.getInt("id_event"));
@@ -185,20 +149,11 @@ public class EvenementService implements IEvenementService {
         e.setLieu(rs.getString("lieu"));
         e.setImage(rs.getString("image"));
 
-        Timestamp td = rs.getTimestamp("date_debut");
-        Timestamp tf = rs.getTimestamp("date_fin");
-
-        e.setDateDebut(td != null ? td.toLocalDateTime() : null);
-        e.setDateFin(tf != null ? tf.toLocalDateTime() : null);
+        Timestamp d1 = rs.getTimestamp("date_debut");
+        Timestamp d2 = rs.getTimestamp("date_fin");
+        if (d1 != null) e.setDateDebut(d1.toLocalDateTime());
+        if (d2 != null) e.setDateFin(d2.toLocalDateTime());
 
         return e;
-    }
-
-    private String safe(String s) {
-        return s == null ? "" : s.toLowerCase(Locale.ROOT).trim();
-    }
-
-    private String safeUpper(String s) {
-        return s == null ? "" : s.toUpperCase(Locale.ROOT).trim();
     }
 }

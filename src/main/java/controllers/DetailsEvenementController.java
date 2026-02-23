@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DetailsEvenementController implements DataReceiver<Integer> {
 
@@ -31,31 +32,27 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblDescription;
     @FXML private Label lblMsg;
 
-    // ✅ conteneur planning (VBox dans ScrollPane)
     @FXML private VBox progContainer;
 
-    private EvenementService evenementService;
-    private ProgrammeService programmeService;
+    private final EvenementService evenementService = new EvenementService();
+    private ProgrammeService programmeService; // ✅ plus besoin try/catch constructeur
 
-    private int eventId;
+    private int eventId = 0;
     private Evenement event;
 
     @FXML
     public void initialize() {
-        try {
-            evenementService = new EvenementService();
-            programmeService = new ProgrammeService();
-        } catch (SQLException e) {
-            showError("Erreur connexion DB");
-            e.printStackTrace();
-        }
+        // ✅ ProgrammeService() ne throw plus
+        programmeService = new ProgrammeService();
+        lblMsg.setText("");
     }
 
-    /** ✅ reçoit eventId depuis SceneUtil.switchToWithData */
+    /** reçoit eventId depuis SceneUtil.switchToWithData */
     @Override
     public void setData(Integer id) {
-        if (id == null) {
-            showError("Aucun ID reçu");
+        if (id == null || id <= 0) {
+            showError("Aucun ID reçu / ID invalide");
+            clearDetails();
             return;
         }
         this.eventId = id;
@@ -65,37 +62,49 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     private void loadDetails() {
-        try {
-            event = evenementService.getOneById(eventId);
+        event = evenementService.getOneById(eventId);
 
-            if (event == null) {
-                showError("Événement introuvable");
-                return;
-            }
-
-            lblTitre.setText(nullSafe(event.getTitre()));
-            lblType.setText(nullSafe(event.getType()));
-            lblLieu.setText(nullSafe(event.getLieu()));
-            lblDebut.setText(event.getDateDebut() == null ? "" : event.getDateDebut().format(F));
-            lblFin.setText(event.getDateFin() == null ? "—" : event.getDateFin().format(F));
-            lblDescription.setText(nullSafe(event.getDescription()));
-
-        } catch (SQLException e) {
-            showError("Erreur chargement détails");
-            e.printStackTrace();
+        if (event == null) {
+            showError("Événement introuvable");
+            clearDetails();
+            return;
         }
+
+        lblTitre.setText(safe(event.getTitre()));
+        lblType.setText(safe(event.getType()));
+        lblLieu.setText(safe(event.getLieu()));
+        lblDebut.setText(event.getDateDebut() == null ? "—" : event.getDateDebut().format(F));
+        lblFin.setText(event.getDateFin() == null ? "—" : event.getDateFin().format(F));
+        lblDescription.setText(safe(event.getDescription()));
+    }
+
+    private void clearDetails() {
+        lblTitre.setText("—");
+        lblType.setText("—");
+        lblLieu.setText("—");
+        lblDebut.setText("—");
+        lblFin.setText("—");
+        lblDescription.setText("");
+        if (progContainer != null) progContainer.getChildren().clear();
     }
 
     private void loadProgrammes() {
+        if (programmeService == null) {
+            showError("Service Programme non initialisé.");
+            return;
+        }
+        if (eventId <= 0) {
+            showError("ID événement invalide.");
+            return;
+        }
+
         try {
             List<Programme> list = programmeService.getByEventId(eventId);
 
-            // ✅ tri chrono (planning)
+            // ✅ tri chrono (compatible Java 8/11)
             list = list.stream()
-                    .sorted(Comparator.comparing(
-                            p -> p.getDebut() == null ? LocalDateTime.MAX : p.getDebut()
-                    ))
-                    .toList();
+                    .sorted(Comparator.comparing(p -> p.getDebut() == null ? LocalDateTime.MAX : p.getDebut()))
+                    .collect(Collectors.toList());
 
             progContainer.getChildren().clear();
 
@@ -116,10 +125,9 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         }
     }
 
-    /** ✅ Une ligne planning : [heure] | [carte avec barre colorée] */
+    /** Une ligne planning : [heure] | [carte] */
     private HBox createProgrammeRow(Programme p) {
 
-        // ---- Colonne heure (gauche) ----
         String heure = (p.getDebut() == null) ? "—" : p.getDebut().format(H);
 
         Label lblTime = new Label(heure);
@@ -130,8 +138,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         timeBox.setPrefWidth(90);
         timeBox.getStyleClass().add("prog-time-box");
 
-        // ---- Carte (droite) ----
-        Label title = new Label(nullSafe(p.getTitre()));
+        Label title = new Label(safe(p.getTitre()));
         title.getStyleClass().add("prog-title");
 
         String range = "";
@@ -154,14 +161,13 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         card.getStyleClass().add("prog-card");
         HBox.setHgrow(details, Priority.ALWAYS);
 
-        // Double clic => supprimer programme
+        // Double clic => supprimer
         card.setOnMouseClicked(ev -> {
             if (ev.getClickCount() == 2) {
                 onDeleteProgramme(p);
             }
         });
 
-        // ---- Ligne complète ----
         HBox row = new HBox(12, timeBox, card);
         row.setAlignment(Pos.TOP_LEFT);
         row.getStyleClass().add("prog-row");
@@ -170,10 +176,15 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     private void onDeleteProgramme(Programme p) {
+        if (programmeService == null) {
+            showError("Service Programme non initialisé.");
+            return;
+        }
+
         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
         a.setTitle("Confirmation");
         a.setHeaderText("Supprimer ce programme ?");
-        a.setContentText(nullSafe(p.getTitre()));
+        a.setContentText(safe(p.getTitre()));
 
         a.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
@@ -182,7 +193,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
                     lblMsg.setText("✅ Programme supprimé");
                     loadProgrammes();
                 } catch (SQLException e) {
-                    showError("Erreur suppression");
+                    showError("Erreur suppression programme");
                     e.printStackTrace();
                 }
             }
@@ -194,13 +205,11 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         SceneUtil.switchToWithData("/AjouterProgramme.fxml", "Ajouter Programme", eventId);
     }
 
-    // ✅ bouton "Modifier" dans ton FXML
     @FXML
     private void onModifierEvenement() {
         SceneUtil.switchToWithData("/ModifierEvenement.fxml", "Modifier Événement", eventId);
     }
 
-    // ✅ bouton "Supprimer Programme" dans ton FXML (optionnel)
     @FXML
     private void onSupprimerProgramme() {
         lblMsg.setText("ℹ️ Double-clic sur un programme pour le supprimer.");
@@ -211,12 +220,11 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         SceneUtil.switchTo("/ListeEvenements.fxml", "Liste Événements");
     }
 
-    // ===== helpers =====
     private void showError(String msg) {
         lblMsg.setText("❌ " + msg);
     }
 
-    private String nullSafe(String s) {
-        return s == null ? "" : s;
+    private String safe(String s) {
+        return s == null ? "" : s.trim();
     }
 }

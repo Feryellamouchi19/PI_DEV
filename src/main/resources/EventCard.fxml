@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
+<StackPane fx:id="rootCard"
+           xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="controllers.EventCardController"
+           prefWidth="240" prefHeight="210"
+           styleClass="event-card">
 
-</AnchorPane>
+    <children>
+        <VBox spacing="8" styleClass="event-card-inner">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+
+            <ImageView fx:id="imgEvent"
+                       fitWidth="200"
+                       fitHeight="120"
+                       preserveRatio="true"
+                       smooth="true"/>
+
+            <Label fx:id="lblTitre" text="Titre" styleClass="event-title"/>
+            <Label fx:id="lblType" text="TYPE" styleClass="event-type"/>
+        </VBox>
+    </children>
+</StackPane>

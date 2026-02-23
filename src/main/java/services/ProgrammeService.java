@@ -5,6 +5,7 @@ import interfaces.IProgrammeService;
 import utils.MyDataBase;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class ProgrammeService implements IProgrammeService {
 
     private final Connection cnx;
 
-    public ProgrammeService() throws SQLException {
+    public ProgrammeService() {
         cnx = MyDataBase.getInstance().getCnx();
     }
 
@@ -26,10 +27,8 @@ public class ProgrammeService implements IProgrammeService {
             ps.setInt(1, p.getEventId());
             ps.setString(2, p.getTitre());
 
-            // date_debut (NOT NULL)
             ps.setTimestamp(3, Timestamp.valueOf(p.getDebut()));
 
-            // date_fin (peut être NULL)
             if (p.getFin() != null) {
                 ps.setTimestamp(4, Timestamp.valueOf(p.getFin()));
             } else {
@@ -131,6 +130,52 @@ public class ProgrammeService implements IProgrammeService {
 
         return list;
     }
+
+    // =====================================================
+    // ✅ CONTRÔLE CHEVAUCHEMENT (ANTI 2 PROG AU MÊME TEMPS)
+    // =====================================================
+
+    /** vrai si un programme du même event chevauche [start, end[ */
+    public boolean existsOverlap(int eventId, LocalDateTime start, LocalDateTime end) throws SQLException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM programme
+            WHERE event_id = ?
+              AND NOT (date_fin <= ? OR date_debut >= ?)
+        """;
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, eventId);
+            ps.setTimestamp(2, Timestamp.valueOf(start));
+            ps.setTimestamp(3, Timestamp.valueOf(end));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    /** récupère le premier programme qui chevauche pour afficher un message clair */
+    public Programme getFirstOverlap(int eventId, LocalDateTime start, LocalDateTime end) throws SQLException {
+        String sql = """
+            SELECT *
+            FROM programme
+            WHERE event_id = ?
+              AND NOT (date_fin <= ? OR date_debut >= ?)
+            ORDER BY date_debut ASC
+            LIMIT 1
+        """;
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, eventId);
+            ps.setTimestamp(2, Timestamp.valueOf(start));
+            ps.setTimestamp(3, Timestamp.valueOf(end));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                return map(rs);
+            }
+        }
+    }
+
+    // =====================================================
 
     private Programme map(ResultSet rs) throws SQLException {
 

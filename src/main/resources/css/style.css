@@ -1,142 +1,148 @@
 /* ============================================
-   PI_DEV - EVENTS UI (Dark / Glass / Premium)
-   JavaFX + SceneBuilder friendly
+   PI_DEV - Events (Dark / Glass / Premium)
+   Works with: ListeEvenements.fxml + EventCard.fxml
+   JavaFX 21+
    ============================================ */
 
-/* ---------- Theme tokens ---------- */
 .root{
     -fx-font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
     -fx-font-size: 13px;
 
-    /* Dark background */
+    /* base */
     -app-bg: #0B1220;
     -overlay: rgba(10, 15, 25, 0.55);
 
-    /* Glass surfaces */
-    -glass: rgba(255,255,255,0.08);
-    -glass-strong: rgba(255,255,255,0.12);
-    -stroke: rgba(255,255,255,0.14);
+    /* glass surfaces */
+    -glass: rgba(20,25,35,0.68);
+    -glass-strong: rgba(20,25,35,0.80);
+    -stroke: rgba(255,255,255,0.16);
 
-    /* Text */
+    /* text */
     -text: #E5E7EB;
-    -muted: rgba(229,231,235,0.72);
+    -muted: rgba(229,231,235,0.70);
 
-    /* Primary (yellow) */
+    /* primary */
     -primary: #FFC107;
     -primary-hover: #FFB300;
     -primary-pressed: #FFA000;
 
-    /* Focus */
+    /* focus */
     -focus: rgba(59,130,246,0.70);
 
-    /* Danger */
+    /* danger */
     -danger: #EF4444;
     -danger-hover: #DC2626;
 
-    /* Shadows */
-    -shadow1: rgba(0,0,0,0.35);
-    -shadow2: rgba(0,0,0,0.55);
+    /* shadows */
+    -shadow1: rgba(0,0,0,0.45);
+    -shadow2: rgba(0,0,0,0.70);
 
     -fx-background-color: -app-bg;
 }
 
-/* Background for containers */
-.border-pane, .anchor-pane, .stack-pane, .vbox, .hbox, .grid-pane {
-    -fx-background-color: transparent;
-}
+/* containers transparent by default */
+.border-pane, .anchor-pane, .stack-pane, .vbox, .hbox, .grid-pane { -fx-background-color: transparent; }
 
-/* ---------- Background helpers ---------- */
-/* Utilise sur un StackPane derrière tout */
-.bg-overlay{
-    -fx-background-color: -overlay;
-}
+/* overlay behind content */
+.bg-overlay{ -fx-background-color: -overlay; }
 
-/* ---------- Labels ---------- */
-.label { -fx-text-fill: -text; }
+/* typography */
+.label{ -fx-text-fill: -text; }
 
 .title{
-    -fx-font-size: 26px;
-    -fx-font-weight: 800;
+    -fx-font-size: 30px;
+    -fx-font-weight: 900;
     -fx-text-fill: -text;
 }
 
 .subtitle{
     -fx-font-size: 13px;
+    -fx-font-weight: 700;
     -fx-text-fill: -muted;
 }
 
-.msg { -fx-text-fill: -muted; -fx-font-weight: 600; }
-.msg-ok { -fx-text-fill: #22C55E; -fx-font-weight: 800; }
-.msg-error { -fx-text-fill: #F87171; -fx-font-weight: 800; }
+.card-title{
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
 
-/* ---------- Glass panels / cards ---------- */
+.card-sub{
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: rgba(229,231,235,0.72);
+}
+
+/* header glass */
+.header-card{
+    -fx-background-color: rgba(20,25,35,0.70);
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-border-color: rgba(255,255,255,0.16);
+    -fx-border-width: 1;
+    -fx-padding: 18 22;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 28, 0.30, 0, 12);
+}
+
+/* filters glass panel */
 .panel{
     -fx-background-color: -glass;
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
     -fx-border-color: -stroke;
     -fx-border-width: 1;
-    -fx-padding: 18;
+    -fx-padding: 16;
     -fx-effect: dropshadow(gaussian, -shadow2, 26, 0.30, 0, 10);
 }
 
+/* ---------- Event Card (premium) ---------- */
 .event-card{
-    -fx-background-color: -glass;
+    -fx-background-color: rgba(20,25,35,0.78); /* + opaque */
     -fx-background-radius: 18;
     -fx-border-radius: 18;
-    -fx-border-color: -stroke;
+    -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-padding: 14;
-    -fx-effect: dropshadow(gaussian, -shadow1, 18, 0.28, 0, 8);
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.33, 0, 12);
 }
 
 .event-card:hover{
-    -fx-background-color: -glass-strong;
+    -fx-background-color: rgba(20,25,35,0.88);
     -fx-border-color: rgba(255,255,255,0.22);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.32, 0, 12);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.80), 30, 0.35, 0, 16);
 }
 
-.event-card-selected{
+.event-card:focused{
     -fx-border-color: -focus;
     -fx-border-width: 1.6;
-    -fx-border-radius: 18;
 }
 
-/* ---------- Badges (Type) ---------- */
+/* badge */
 .badge{
     -fx-background-radius: 999;
     -fx-padding: 4 10;
     -fx-font-size: 11px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #0B1220;
+    -fx-font-weight: 900;
+    -fx-text-fill: #111827;
     -fx-background-color: -primary;
 }
 
-.badge-green{ -fx-background-color: #22C55E; -fx-text-fill: #052E16; }
-.badge-blue{  -fx-background-color: #60A5FA; -fx-text-fill: #0B1220; }
-.badge-purple{ -fx-background-color: #A78BFA; -fx-text-fill: #0B1220; }
-
-/* ---------- Inputs (Glass) ---------- */
+/* inputs */
 .text-field,
 .combo-box,
 .date-picker,
 .text-area{
-    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-color: rgba(255,255,255,0.07);
     -fx-background-radius: 14;
     -fx-border-radius: 14;
-    -fx-border-color: rgba(255,255,255,0.14);
+    -fx-border-color: rgba(255,255,255,0.15);
     -fx-border-width: 1;
-    -fx-padding: 10 12 10 12;
+    -fx-padding: 10 12;
     -fx-text-fill: -text;
     -fx-prompt-text-fill: rgba(229,231,235,0.45);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.25, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 14, 0.25, 0, 6);
 }
 
-.text-area{
-    -fx-padding: 10;
-}
-
-/* Focus */
 .text-field:focused,
 .combo-box:focused,
 .date-picker:focused,
@@ -146,15 +152,18 @@
     -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.22), 18, 0.30, 0, 8);
 }
 
-/* ComboBox arrow button */
-.combo-box .arrow-button{ -fx-background-color: transparent; }
-.combo-box .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
-
-/* DatePicker arrow button */
+.combo-box .arrow-button,
 .date-picker .arrow-button{ -fx-background-color: transparent; }
-.date-picker .arrow-button .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
+.combo-box .arrow,
+.date-picker .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
 
-/* ---------- Buttons ---------- */
+/* Fix weird yellow area in combobox */
+.combo-box-base{
+    -fx-background-insets: 0;
+    -fx-background-color: rgba(255,255,255,0.07);
+}
+
+/* buttons */
 .button{
     -fx-cursor: hand;
     -fx-font-weight: 900;
@@ -163,108 +172,188 @@
     -fx-padding: 10 18;
 }
 
-/* Primary yellow */
 .btn-primary{
     -fx-background-color: -primary;
     -fx-text-fill: #111827;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 14, 0.28, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 14, 0.28, 0, 6);
 }
-
 .btn-primary:hover{ -fx-background-color: -primary-hover; }
-.btn-primary:pressed{
-    -fx-background-color: -primary-pressed;
-    -fx-translate-y: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0.20, 0, 4);
-}
+.btn-primary:pressed{ -fx-background-color: -primary-pressed; -fx-translate-y: 1; }
 
-/* Secondary dark */
 .btn-secondary{
-    -fx-background-color: rgba(255,255,255,0.10);
+    -fx-background-color: rgba(255,255,255,0.12);
     -fx-text-fill: -text;
     -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
 }
+.btn-secondary:hover{ -fx-background-color: rgba(255,255,255,0.16); }
 
-.btn-secondary:hover{
-    -fx-background-color: rgba(255,255,255,0.14);
-}
-
-/* Danger */
 .btn-danger{
     -fx-background-color: -danger;
     -fx-text-fill: white;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 14, 0.28, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 14, 0.28, 0, 6);
 }
 .btn-danger:hover{ -fx-background-color: -danger-hover; }
-.btn-danger:pressed{ -fx-translate-y: 1; }
 
-.button:disabled{
-    -fx-opacity: 0.55;
-    -fx-cursor: default;
+.button:disabled{ -fx-opacity: 0.55; -fx-cursor: default; }
+
+/* ScrollPane transparent */
+.glass-scroll{
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
 }
+.glass-scroll > .viewport{ -fx-background-color: transparent; }
+.scroll-pane{ -fx-background-color: transparent; }
+.scroll-pane > .viewport{ -fx-background-color: transparent; }
 
-/* ---------- ComboBox / DatePicker popup (dark, readable) ---------- */
+/* ComboBox popup dark */
 .combo-box-popup .list-view{
     -fx-background-color: rgba(15,23,42,0.92);
     -fx-background-radius: 12;
     -fx-border-radius: 12;
     -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 22, 0.30, 0, 10);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 22, 0.30, 0, 10);
 }
-
-.combo-box-popup .list-cell{
-    -fx-background-color: transparent;
-    -fx-text-fill: #E5E7EB;
-}
-
-.combo-box-popup .list-cell:hover{
-    -fx-background-color: rgba(255,255,255,0.08);
-}
-
+.combo-box-popup .list-cell{ -fx-background-color: transparent; -fx-text-fill: #E5E7EB; }
+.combo-box-popup .list-cell:hover{ -fx-background-color: rgba(255,255,255,0.08); }
 .combo-box-popup .list-cell:filled:selected{
     -fx-background-color: rgba(255,193,7,0.22);
     -fx-text-fill: #FFF7D1;
 }
 
-/* DatePicker calendar popup */
+/* DatePicker popup dark */
 .date-picker-popup{
     -fx-background-color: rgba(15,23,42,0.94);
     -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 24, 0.30, 0, 12);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 24, 0.30, 0, 12);
 }
-
-.date-picker-popup .month-year-pane{
-    -fx-background-color: rgba(255,255,255,0.06);
-}
-
-.date-picker-popup .day-cell{
-    -fx-text-fill: #E5E7EB;
-}
-
-.date-picker-popup .day-cell:hover{
-    -fx-background-color: rgba(255,255,255,0.10);
-}
-
+.date-picker-popup .month-year-pane{ -fx-background-color: rgba(255,255,255,0.06); }
+.date-picker-popup .day-cell{ -fx-text-fill: #E5E7EB; }
+.date-picker-popup .day-cell:hover{ -fx-background-color: rgba(255,255,255,0.10); }
 .date-picker-popup .day-cell:selected{
     -fx-background-color: rgba(255,193,7,0.35);
     -fx-text-fill: #FFF7D1;
 }
 
-/* ---------- ScrollBar (optional but nice) ---------- */
-.scroll-bar:vertical .track,
-.scroll-bar:horizontal .track{
+/* Scrollbar */
+.scroll-bar:vertical .track, .scroll-bar:horizontal .track{
     -fx-background-color: rgba(255,255,255,0.06);
     -fx-background-radius: 999;
 }
-
-.scroll-bar:vertical .thumb,
-.scroll-bar:horizontal .thumb{
-    -fx-background-color: rgba(255,255,255,0.16);
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb{
+    -fx-background-color: rgba(255,255,255,0.18);
     -fx-background-radius: 999;
 }
-.scroll-bar:vertical .thumb:hover,
-.scroll-bar:horizontal .thumb:hover{
-    -fx-background-color: rgba(255,255,255,0.22);
+.scroll-bar:vertical .thumb:hover, .scroll-bar:horizontal .thumb:hover{
+    -fx-background-color: rgba(255,255,255,0.26);
+}
+.scroll-bar .increment-button, .scroll-bar .decrement-button{
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow{
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+/* ============================= */
+/*         EVENT CARD            */
+/* ============================= */
+
+.event-card {
+    -fx-background-color: rgba(15, 23, 42, 0.70);
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.50), 22, 0.30, 0, 10);
+}
+
+.event-card:hover {
+    -fx-border-color: rgba(255, 193, 7, 0.60);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 28, 0.35, 0, 14);
+}
+
+.event-card-selected {
+    -fx-border-color: rgba(59,130,246,0.85);
+    -fx-border-width: 2;
+}
+
+.event-card-inner {
+    -fx-background-color: transparent;
+}
+
+.event-image-wrapper {
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-background-color: rgba(255,255,255,0.05);
+}
+
+.event-image {
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+}
+
+.event-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
+
+.event-date {
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255,255,255,0.70);
+}
+
+.event-badge {
+    -fx-background-color: rgba(255, 193, 7, 0.95);
+    -fx-text-fill: #111827;
+    -fx-font-weight: 900;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 999;
+}
+/* ===== Event Card ===== */
+.event-card {
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-border-color: rgba(255,255,255,0.14);
+    -fx-border-width: 1;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 8);
+}
+
+.event-card-inner {
+    -fx-background-radius: 22;
+}
+
+.event-card-selected {
+    -fx-border-color: rgba(255,193,7,0.85);
+    -fx-border-width: 2;
+}
+
+.event-cover {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+}
+
+.event-title {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.event-type {
+    -fx-text-fill: rgba(255,255,255,0.85);
+    -fx-font-size: 12px;
+}
+
+.event-lieu {
+    -fx-text-fill: rgba(255,255,255,0.75);
+    -fx-font-size: 12px;
 }

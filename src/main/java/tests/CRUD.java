@@ -5,6 +5,7 @@ import entities.Programme;
 import services.EvenementService;
 import services.ProgrammeService;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -16,19 +17,14 @@ public class CRUD {
 
     private final Scanner sc = new Scanner(System.in);
 
-    private final EvenementService se;
-    private final ProgrammeService sp;
+    private final EvenementService se = new EvenementService();
+    private final ProgrammeService sp = new ProgrammeService();
 
-    public CRUD() throws Exception {
-        se = new EvenementService();
-        sp = new ProgrammeService();
-    }
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         new CRUD().run();
     }
 
-    private void run() throws Exception {
+    private void run() {
         while (true) {
             System.out.println("\n==============================");
             System.out.println("   CRUD EVENEMENT / PROGRAMME ");
@@ -47,28 +43,33 @@ public class CRUD {
 
             String choix = sc.nextLine().trim();
 
-            switch (choix) {
-                case "1" -> ajouterEvenement();
-                case "2" -> afficherTousEvenements();
-                case "3" -> afficherEvenementEtProgrammes();
-                case "4" -> modifierEvenement();
-                case "5" -> supprimerEvenement();
-                case "6" -> ajouterProgramme();
-                case "7" -> modifierProgramme();
-                case "8" -> supprimerProgramme();
-                case "9" -> afficherTousProgrammes();
-                case "0" -> {
-                    System.out.println("Bye 👋");
-                    return;
+            try {
+                switch (choix) {
+                    case "1" -> ajouterEvenement();
+                    case "2" -> afficherTousEvenements();
+                    case "3" -> afficherEvenementEtProgrammes();
+                    case "4" -> modifierEvenement();
+                    case "5" -> supprimerEvenement();
+                    case "6" -> ajouterProgramme();
+                    case "7" -> modifierProgramme();
+                    case "8" -> supprimerProgramme();
+                    case "9" -> afficherTousProgrammes();
+                    case "0" -> { System.out.println("Bye 👋"); return; }
+                    default -> System.out.println("❌ Choix invalide.");
                 }
-                default -> System.out.println("❌ Choix invalide.");
+            } catch (SQLException ex) {
+                System.out.println("❌ SQL Error: " + ex.getMessage());
+                ex.printStackTrace();
+            } catch (Exception ex) {
+                System.out.println("❌ Error: " + ex.getMessage());
+                ex.printStackTrace();
             }
         }
     }
 
     // ===================== EVENEMENT =====================
 
-    private void ajouterEvenement() throws Exception {
+    private void ajouterEvenement() {
         System.out.println("\n=== AJOUT EVENEMENT ===");
 
         String titre = lireTexte("Titre: ", 3, 150);
@@ -85,19 +86,26 @@ public class CRUD {
             System.out.println("ℹ️ Type " + type + " => date_fin non requise.");
         }
 
-        Evenement e = new Evenement(titre, desc, type, debut, fin, lieu);
+        String imageFileName = lireTexteOptionnel("Image (ex: logo.png) [optionnel]: ", 1, 200);
+        if (imageFileName == null) imageFileName = "";
+
+        // ⚠️ Ce constructeur doit exister dans Evenement:
+        // (titre, description, type, dateDebut, dateFin, lieu, image)
+        Evenement e = new Evenement(titre, desc, type, debut, fin, lieu, imageFileName);
+
+        // EvenementService.add() ne throw pas, il catch SQL à l'intérieur
         se.add(e);
 
-        System.out.println("✅ Evenement ajouté. ID = " + e.getIdEvent());
+        System.out.println("✅ Evenement ajouté.");
     }
 
-    private void afficherTousEvenements() throws Exception {
+    private void afficherTousEvenements() {
         List<Evenement> list = se.getAll();
         System.out.println("\n=== LISTE EVENEMENTS (" + list.size() + ") ===");
         list.forEach(System.out::println);
     }
 
-    private void afficherEvenementEtProgrammes() throws Exception {
+    private void afficherEvenementEtProgrammes() throws SQLException {
         int id = lireInt("ID evenement: ");
         Evenement e = se.getOneById(id);
 
@@ -113,7 +121,7 @@ public class CRUD {
         progs.forEach(p -> System.out.println("  - " + p));
     }
 
-    private void modifierEvenement() throws Exception {
+    private void modifierEvenement() {
         int id = lireInt("ID evenement à modifier: ");
         Evenement e = se.getOneById(id);
 
@@ -147,19 +155,22 @@ public class CRUD {
             e.setDateFin(null);
         }
 
+        String image = lireTexteOptionnel("Nouvelle image (ex: logo.png) [optionnel]: ", 1, 200);
+        if (image != null) e.setImage(image);
+
         se.update(e);
         System.out.println("✅ Evenement modifié.");
     }
 
-    private void supprimerEvenement() throws Exception {
+    private void supprimerEvenement() {
         int id = lireInt("ID evenement à supprimer: ");
         se.delete(id);
-        System.out.println("✅ Evenement supprimé. (Programmes supprimés si FK CASCADE)");
+        System.out.println("✅ Evenement supprimé.");
     }
 
     // ===================== PROGRAMME =====================
 
-    private void ajouterProgramme() throws Exception {
+    private void ajouterProgramme() throws SQLException {
         int eventId = lireInt("event_id (ID evenement): ");
         Evenement e = se.getOneById(eventId);
 
@@ -174,7 +185,6 @@ public class CRUD {
         LocalDateTime debut = lireDate("Debut programme (yyyy-MM-dd HH:mm): ");
         LocalDateTime fin = lireDateApres("Fin programme   (yyyy-MM-dd HH:mm): ", debut);
 
-        // contrôles simples selon type
         if ((e.getType().equals("CAMPING") || e.getType().equals("SEJOUR")) && e.getDateFin() != null) {
             if (debut.isBefore(e.getDateDebut()) || fin.isAfter(e.getDateFin())) {
                 System.out.println("❌ Programme doit être entre " + e.getDateDebut().format(FMT) + " et " + e.getDateFin().format(FMT));
@@ -193,7 +203,7 @@ public class CRUD {
         System.out.println("✅ Programme ajouté. id_prog = " + p.getIdProg());
     }
 
-    private void modifierProgramme() throws Exception {
+    private void modifierProgramme() throws SQLException {
         int idProg = lireInt("id_prog à modifier: ");
         Programme p = sp.getOneById(idProg);
 
@@ -203,7 +213,6 @@ public class CRUD {
         }
 
         System.out.println("Actuel: " + p);
-        System.out.println("Laisse vide pour garder la valeur.");
 
         String titre = lireTexteOptionnel("Nouveau titre: ", 2, 150);
         if (titre != null) p.setTitre(titre);
@@ -219,13 +228,13 @@ public class CRUD {
         System.out.println("✅ Programme modifié.");
     }
 
-    private void supprimerProgramme() throws Exception {
+    private void supprimerProgramme() throws SQLException {
         int idProg = lireInt("id_prog à supprimer: ");
         sp.delete(idProg);
         System.out.println("✅ Programme supprimé.");
     }
 
-    private void afficherTousProgrammes() throws Exception {
+    private void afficherTousProgrammes() throws SQLException {
         List<Programme> list = sp.getAll();
         System.out.println("\n=== LISTE PROGRAMMES (" + list.size() + ") ===");
         list.forEach(System.out::println);

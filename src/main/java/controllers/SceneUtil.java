@@ -1,69 +1,100 @@
 package controllers;
 
-import interfaces.DataReceiver;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import java.net.URL;
 
 public class SceneUtil {
 
-    private static Stage primaryStage;
+    private static Stage stage;
 
-    /** À appeler une seule fois dans Home.start(primaryStage) */
-    public static void init(Stage stage) {
-        primaryStage = stage;
+    private SceneUtil() {}
+
+    public static void setStage(Stage s) {
+        stage = s;
     }
 
-    public static void switchTo(String fxml, String title) {
-        ensureStage();
-        try {
-            FXMLLoader loader = new FXMLLoader(SceneUtil.class.getResource(fxml));
-            Parent root = loader.load();
-
-            primaryStage.setScene(new Scene(root));
-            primaryStage.setTitle(title);
-            primaryStage.show();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Erreur chargement FXML: " + fxml, e);
-        }
+    public static Stage getStage() {
+        return stage;
     }
 
-    public static <T> void switchToWithData(String fxml, String title, T data) {
-        ensureStage();
+    public static void switchTo(String fxmlPath, String title) {
+        switchToWithData(fxmlPath, title, null);
+    }
+
+    public static <T> void switchToWithData(String fxmlPath, String title, T data) {
         try {
-            FXMLLoader loader = new FXMLLoader(SceneUtil.class.getResource(fxml));
-            Parent root = loader.load();
-
-            Object controller = loader.getController();
-
-            // ✅ Transmettre la donnée si le controller implémente DataReceiver
-            if (controller instanceof DataReceiver<?> dr) {
-                @SuppressWarnings("unchecked")
-                DataReceiver<T> receiver = (DataReceiver<T>) dr;
-                receiver.setData(data);
-            } else {
-                System.out.println("⚠️ Controller ne reçoit pas de data (pas DataReceiver): " + controller);
+            if (stage == null) {
+                throw new IllegalStateException(
+                        "Stage non initialisé. Dans ton Application.start(), appelle SceneUtil.setStage(primaryStage);"
+                );
             }
 
-            primaryStage.setScene(new Scene(root));
-            primaryStage.setTitle(title);
-            primaryStage.show();
+            URL url = SceneUtil.class.getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalStateException(
+                        "FXML introuvable: " + fxmlPath +
+                                "\n➡️ Vérifie que le fichier est dans src/main/resources et que tu passes un chemin du style: /ListeEvenements.fxml"
+                );
+            }
 
-        } catch (IOException e) {
-            throw new RuntimeException("Erreur chargement FXML: " + fxml, e);
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            // Passer data si controller l'accepte
+            Object controller = loader.getController();
+            if (data != null && controller instanceof interfaces.DataReceiver<?> dr) {
+                @SuppressWarnings("unchecked")
+                interfaces.DataReceiver<T> receiver = (interfaces.DataReceiver<T>) dr;
+                receiver.setData(data);
+            }
+
+            Scene scene = new Scene(root);
+
+            stage.setTitle(title);
+            stage.setScene(scene);
+            stage.centerOnScreen();
+            stage.show();
+
+        } catch (Exception e) {
+            System.out.println("❌ SceneUtil error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    private static void ensureStage() {
-        if (primaryStage == null) {
-            throw new IllegalStateException(
-                    "SceneUtil.primaryStage est null. " +
-                            "Appelle SceneUtil.init(primaryStage) dans Home.start(...) avant switchTo."
-            );
+    /** Optionnel : si tu veux récupérer le controller après chargement */
+    public static <C> C switchToAndReturnController(String fxmlPath, String title) {
+        try {
+            if (stage == null) {
+                throw new IllegalStateException("Stage non initialisé. Appelle SceneUtil.setStage(primaryStage).");
+            }
+
+            URL url = SceneUtil.class.getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalStateException("FXML introuvable: " + fxmlPath);
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            Scene scene = new Scene(root);
+
+            stage.setTitle(title);
+            stage.setScene(scene);
+            stage.centerOnScreen();
+            stage.show();
+
+            @SuppressWarnings("unchecked")
+            C controller = (C) loader.getController();
+            return controller;
+
+        } catch (Exception e) {
+            System.out.println("❌ SceneUtil error: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
 }
