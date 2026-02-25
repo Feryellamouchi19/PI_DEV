@@ -23,7 +23,6 @@ public class EventCardController {
     private Consumer<Evenement> onSelect;
     private Consumer<Evenement> onDoubleClick;
 
-    /** Single click = selection, double click = ouvrir détails (si onDoubleClick fourni). */
     public void setData(Evenement e, Consumer<Evenement> onSelect) {
         setData(e, onSelect, null);
     }
@@ -42,7 +41,6 @@ public class EventCardController {
 
         String file = (e.getImage() == null || e.getImage().isBlank()) ? "logo.png" : e.getImage().trim();
 
-        // 1) uploads/images
         try {
             Path p = Path.of("uploads/images").resolve(file);
             if (Files.exists(p)) {
@@ -56,12 +54,22 @@ public class EventCardController {
 
         rootCard.setOnMouseClicked(ev -> {
             if (current == null) return;
+
             if (ev.getClickCount() >= 2 && this.onDoubleClick != null) {
                 this.onDoubleClick.accept(current);
             } else if (this.onSelect != null) {
                 this.onSelect.accept(current);
             }
         });
+    }
+
+    public void setSelected(boolean selected) {
+        if (rootCard == null) return;
+        if (selected) {
+            if (!rootCard.getStyleClass().contains("selected")) rootCard.getStyleClass().add("selected");
+        } else {
+            rootCard.getStyleClass().remove("selected");
+        }
     }
 
     private void loadFromResources(String file) {

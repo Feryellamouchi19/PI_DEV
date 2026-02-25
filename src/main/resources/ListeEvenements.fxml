@@ -10,7 +10,6 @@
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.ListeEvenementsController">
 
-    <!-- Background -->
     <ImageView fx:id="bgImage"
                fitHeight="650.0"
                fitWidth="900.0"
@@ -23,13 +22,10 @@
             <Insets bottom="26" left="26" right="26" top="26" />
         </padding>
 
-        <!-- ================= HEADER ================= -->
         <top>
             <VBox spacing="14">
 
-                <HBox alignment="CENTER_LEFT"
-                      spacing="16"
-                      styleClass="header-card">
+                <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
 
                     <ImageView fx:id="imgLogo"
                                fitHeight="58"
@@ -37,27 +33,20 @@
                                preserveRatio="true" />
 
                     <VBox spacing="3">
-                        <Label styleClass="title"
-                               text="Liste des Événements" />
-                        <Label fx:id="lblMsg"
-                               styleClass="subtitle"
-                               text="" />
+                        <Label styleClass="title" text="Liste des Événements" />
+                        <Label fx:id="lblMsg" styleClass="subtitle" text="" />
                     </VBox>
 
                     <Pane HBox.hgrow="ALWAYS" />
 
-                    <!-- ✅ ROLE SWITCH -->
                     <HBox spacing="8" alignment="CENTER_RIGHT">
                         <Label text="Mode:" styleClass="chip"/>
-                        <ChoiceBox fx:id="cbRole"
-                                   prefWidth="130.0"/>
+                        <ChoiceBox fx:id="cbRole" prefWidth="130.0"/>
                     </HBox>
 
                 </HBox>
 
-                <!-- ================= SEARCH ================= -->
                 <HBox alignment="CENTER_LEFT" spacing="12">
-
                     <TextField fx:id="txtSearch"
                                promptText="Rechercher par titre / lieu / description..."
                                HBox.hgrow="ALWAYS" />
@@ -73,26 +62,12 @@
                             onAction="#onReset"/>
                 </HBox>
 
-                <!-- ================= FILTERS ================= -->
-                <HBox alignment="CENTER_LEFT"
-                      spacing="12"
-                      styleClass="panel">
+                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel">
 
-                    <ComboBox fx:id="cbType"
-                              prefWidth="170.0"
-                              promptText="Type" />
-
-                    <ComboBox fx:id="cbSort"
-                              prefWidth="170.0"
-                              promptText="Trier par" />
-
-                    <DatePicker fx:id="dpFrom"
-                                prefWidth="170.0"
-                                promptText="Du" />
-
-                    <DatePicker fx:id="dpTo"
-                                prefWidth="170.0"
-                                promptText="Au" />
+                    <ComboBox fx:id="cbType" prefWidth="170.0" promptText="Type" />
+                    <ComboBox fx:id="cbSort" prefWidth="170.0" promptText="Trier par" />
+                    <DatePicker fx:id="dpFrom" prefWidth="170.0" promptText="Du" />
+                    <DatePicker fx:id="dpTo" prefWidth="170.0" promptText="Au" />
 
                     <Pane HBox.hgrow="ALWAYS" />
 
@@ -105,7 +80,6 @@
             </VBox>
         </top>
 
-        <!-- ================= CENTER ================= -->
         <center>
             <VBox spacing="10">
                 <padding>
@@ -117,44 +91,52 @@
                             styleClass="glass-scroll">
 
                     <content>
-                        <FlowPane fx:id="flowEvents"
-                                  hgap="18"
-                                  vgap="18"
-                                  prefWrapLength="820">
-
+                        <VBox spacing="14">
                             <padding>
-                                <Insets bottom="10"
-                                        left="10"
-                                        right="10"
-                                        top="10" />
+                                <Insets bottom="10" left="10" right="10" top="10"/>
                             </padding>
 
-                        </FlowPane>
+                            <Label text="Résultats" styleClass="subtitle"/>
+
+                            <FlowPane fx:id="flowEvents"
+                                      hgap="18"
+                                      vgap="18"
+                                      prefWrapLength="820"/>
+
+                            <!-- ✅ RECO (cachable) -->
+                            <VBox fx:id="boxReco" spacing="10">
+                                <Label fx:id="lblReco"
+                                       text="⭐ Recommandés pour vous"
+                                       styleClass="subtitle"/>
+
+                                <FlowPane fx:id="flowRecommended"
+                                          hgap="18"
+                                          vgap="18"
+                                          prefWrapLength="820"/>
+                            </VBox>
+
+                        </VBox>
                     </content>
 
                 </ScrollPane>
             </VBox>
         </center>
 
-        <!-- ================= BOTTOM ================= -->
         <bottom>
             <HBox alignment="CENTER_RIGHT" spacing="12">
                 <padding>
                     <Insets top="18" />
                 </padding>
 
-                <!-- ✅ ADMIN ONLY -->
                 <Button fx:id="btnSupprimer"
                         styleClass="btn-danger"
                         text="Supprimer"
                         onAction="#onSupprimer"/>
 
-                <!-- ✅ ADMIN ONLY -->
                 <Button fx:id="btnAjouterBottom"
                         styleClass="btn-primary"
                         text="Ajouter Événement"
                         onAction="#onGoAjouter"/>
-
             </HBox>
         </bottom>
 
