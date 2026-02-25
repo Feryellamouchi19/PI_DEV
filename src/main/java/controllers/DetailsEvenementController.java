@@ -15,8 +15,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import services.EvenementService;
 import services.ProgrammeService;
+import services.SpotifyOEmbedService;
 
 import java.awt.Desktop;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -30,10 +32,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// HTTP
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 public class DetailsEvenementController implements DataReceiver<Integer> {
 
     private final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private final DateTimeFormatter H = DateTimeFormatter.ofPattern("HH:mm");
+
+    // ✅ HTTP client (utilisé pour cover Spotify + oEmbed)
+    private final HttpClient http = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .build();
 
     @FXML private Label lblTitre;
     @FXML private Label lblType;
@@ -54,7 +66,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblQrInfo;
     @FXML private Button btnRegenQr;
 
-    // ✅ Meteo
+    // ✅ Meteo (tu as déjà ton WeatherService)
     @FXML private Label lblMeteo;
     private final services.WeatherService weatherService = new services.WeatherService();
 
@@ -75,6 +87,9 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private int eventId = 0;
     private Evenement event;
 
+    // ✅ Spotify service
+    private final SpotifyOEmbedService spotifyService = new SpotifyOEmbedService();
+
     @FXML
     public void initialize() {
         SceneUtil.loadBackgroundImage(bgImage);
@@ -85,7 +100,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblQrInfo != null) lblQrInfo.setText("");
         if (lblMeteo != null) lblMeteo.setText("");
 
-        // Par défaut cacher spotify tant qu’on n’a pas chargé l’event
+        // cacher Spotify tant qu’on n’a pas l’event
         hideSpotifyBox();
     }
 
@@ -126,7 +141,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         // ✅ Météo auto
         loadMeteoAsync();
 
-        // ✅ Spotify auto (IMPORTANT)
+        // ✅ Spotify auto
         applySpotifyUI();
     }
 
@@ -341,45 +356,110 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         th.start();
     }
 
-    // ===================== ✅ SPOTIFY (FIX) =====================
+    // ===================== ✅ SPOTIFY (COVER OFFICIELLE) =====================
 
     private void applySpotifyUI() {
         if (event == null) { hideSpotifyBox(); return; }
 
-        String type = safe(event.getType()).toUpperCase(); // important
-        String url  = safe(event.getSpotifyUrl());          // IMPORTANT
-
-        // DEBUG (tu peux laisser pour vérifier)
-        System.out.println("DEBUG type=" + type + " spotifyUrl=" + url);
+        String type = safe(event.getType()).toUpperCase();
+        String url  = safe(event.getSpotifyUrl());
 
         boolean isSoiree = "SOIREE".equalsIgnoreCase(type.trim());
         boolean hasUrl   = !url.isBlank();
 
-        // on affiche seulement si SOIREE + URL
         if (!isSoiree || !hasUrl) {
             hideSpotifyBox();
             return;
         }
 
-        // ✅ rendre visible + managed (sinon il ne prend pas de place)
+        // afficher bloc
         if (spotifyBox != null) {
             spotifyBox.setVisible(true);
             spotifyBox.setManaged(true);
         }
 
-        if (lblSpotifyMsg != null) lblSpotifyMsg.setText("Playlist associée à l'événement");
-        if (lblSpotifyTitle != null) lblSpotifyTitle.setText("Playlist Spotify");
-        if (lblSpotifyProvider != null) lblSpotifyProvider.setText(url);
-
-        // ✅ cover (option: mets /images/spotify.png)
-        if (imgSpotifyCover != null) {
-            try (InputStream is = getClass().getResourceAsStream("/images/spotify.png")) {
-                if (is != null) imgSpotifyCover.setImage(new Image(is));
-            } catch (Exception ignored) {}
-        }
-
-        // bouton
+        if (lblSpotifyMsg != null) lblSpotifyMsg.setText("⏳ Chargement playlist Spotify...");
+        if (lblSpotifyTitle != null) lblSpotifyTitle.setText("");
+        if (lblSpotifyProvider != null) lblSpotifyProvider.setText("Spotify");
+        if (imgSpotifyCover != null) imgSpotifyCover.setImage(null);
         if (btnOpenSpotify != null) btnOpenSpotify.setDisable(false);
+
+        // charge title + cover via oEmbed
+        loadSpotifyOEmbedAsync(url);
+    }
+
+    private void loadSpotifyOEmbedAsync(String spotifyUrl) {
+        Task<SpotifyOEmbedService.SpotifyInfo> task = new Task<>() {
+            @Override
+            protected SpotifyOEmbedService.SpotifyInfo call() throws Exception {
+                return spotifyService.fetchOEmbed(spotifyUrl);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            SpotifyOEmbedService.SpotifyInfo info = task.getValue();
+            if (info == null) {
+                if (lblSpotifyMsg != null) lblSpotifyMsg.setText("❌ Spotify indisponible");
+                return;
+            }
+
+            if (lblSpotifyMsg != null) lblSpotifyMsg.setText("✓ Playlist associée à l'événement");
+            if (lblSpotifyTitle != null) lblSpotifyTitle.setText(safe(info.title));
+            if (lblSpotifyProvider != null) lblSpotifyProvider.setText(safe(info.providerName));
+
+            // ✅ cover officielle -> download bytes (évite bug JavaFX https)
+            if (imgSpotifyCover != null && info.thumbnailUrl != null && !info.thumbnailUrl.isBlank()) {
+                loadSpotifyCoverAsync(info.thumbnailUrl);
+            } else {
+                if (lblSpotifyMsg != null) lblSpotifyMsg.setText("⚠️ Cover Spotify introuvable");
+            }
+        });
+
+        task.setOnFailed(e -> {
+            if (lblSpotifyMsg != null) lblSpotifyMsg.setText("❌ Erreur Spotify");
+            task.getException().printStackTrace();
+        });
+
+        Thread th = new Thread(task, "spotify-oembed-task");
+        th.setDaemon(true);
+        th.start();
+    }
+
+    // ✅ Téléchargement cover Spotify (bytes -> Image)
+    private void loadSpotifyCoverAsync(String imageUrl) {
+        Task<Image> task = new Task<>() {
+            @Override
+            protected Image call() throws Exception {
+                HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(imageUrl))
+                        .GET()
+                        .header("User-Agent", "JavaFX")
+                        .build();
+
+                HttpResponse<byte[]> resp = http.send(req, HttpResponse.BodyHandlers.ofByteArray());
+                if (resp.statusCode() != 200) return null;
+
+                return new Image(new ByteArrayInputStream(resp.body()));
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            Image img = task.getValue();
+            if (img != null && imgSpotifyCover != null) {
+                imgSpotifyCover.setImage(img);
+            } else if (lblSpotifyMsg != null) {
+                lblSpotifyMsg.setText("⚠️ Cover Spotify indisponible");
+            }
+        });
+
+        task.setOnFailed(e -> {
+            if (lblSpotifyMsg != null) lblSpotifyMsg.setText("❌ Erreur chargement cover");
+            task.getException().printStackTrace();
+        });
+
+        Thread th = new Thread(task, "spotify-cover-task");
+        th.setDaemon(true);
+        th.start();
     }
 
     private void hideSpotifyBox() {

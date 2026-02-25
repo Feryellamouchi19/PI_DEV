@@ -2,73 +2,60 @@ package services;
 
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SpotifyOEmbedService {
 
-    public static class SpotifyCard {
-        public final String title;
-        public final String thumbnailUrl;
-        public final String providerName;
-
-        public SpotifyCard(String title, String thumbnailUrl, String providerName) {
-            this.title = title;
-            this.thumbnailUrl = thumbnailUrl;
-            this.providerName = providerName;
-        }
-    }
-
     private final HttpClient http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(8))
+            .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
 
-    /**
-     * Récupère un "card" (title + image) depuis Spotify oEmbed.
-     * Exemple URL: https://open.spotify.com/playlist/XXXX
-     */
-    public SpotifyCard fetchCard(String spotifyUrl) throws Exception {
-        String encoded = URLEncoder.encode(spotifyUrl, StandardCharsets.UTF_8);
-        String url = "https://open.spotify.com/oembed?url=" + encoded;
+    public static class SpotifyInfo {
+        public String title;
+        public String providerName;
+        public String thumbnailUrl;
+    }
+
+    public SpotifyInfo fetchOEmbed(String spotifyUrl) throws Exception {
+        if (spotifyUrl == null || spotifyUrl.isBlank()) return null;
+
+        // oEmbed endpoint Spotify
+        String endpoint = "https://open.spotify.com/oembed?url=" +
+                URLEncoder.encode(spotifyUrl, StandardCharsets.UTF_8);
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(10))
-                .GET()
+                .uri(URI.create(endpoint))
                 .header("User-Agent", "JavaFX")
+                .GET()
                 .build();
 
-        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
-        if (res.statusCode() != 200) {
-            throw new RuntimeException("Spotify oEmbed HTTP " + res.statusCode());
-        }
+        HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() != 200) return null;
 
-        String json = res.body();
+        String json = resp.body();
+        SpotifyInfo info = new SpotifyInfo();
 
-        String title = extractJsonString(json, "title");
-        String thumb = extractJsonString(json, "thumbnail_url");
-        String provider = extractJsonString(json, "provider_name");
+        info.title = extractString(json, "\"title\"");
+        info.providerName = extractString(json, "\"provider_name\"");
+        info.thumbnailUrl = extractString(json, "\"thumbnail_url\"");
 
-        return new SpotifyCard(title, thumb, provider);
+        return info;
     }
 
-    // --- mini extracteur JSON (sans lib) ---
-    private static String extractJsonString(String json, String key) {
-        Pattern p = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"(.*?)\"", Pattern.DOTALL);
-        Matcher m = p.matcher(json);
-        if (!m.find()) return "";
-        return unescape(m.group(1));
-    }
-
-    private static String unescape(String s) {
-        return s.replace("\\/", "/")
-                .replace("\\n", "\n")
-                .replace("\\t", "\t")
-                .replace("\\\"", "\"");
+    // mini extract JSON (sans lib)
+    private String extractString(String json, String key) {
+        if (json == null) return "";
+        int i = json.indexOf(key);
+        if (i < 0) return "";
+        int colon = json.indexOf(":", i);
+        if (colon < 0) return "";
+        int firstQuote = json.indexOf("\"", colon + 1);
+        if (firstQuote < 0) return "";
+        int secondQuote = json.indexOf("\"", firstQuote + 1);
+        if (secondQuote < 0) return "";
+        return json.substring(firstQuote + 1, secondQuote).trim();
     }
 }
