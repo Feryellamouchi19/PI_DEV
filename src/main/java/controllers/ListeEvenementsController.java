@@ -5,8 +5,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import services.EvenementService;
+import utils.Session; // ✅ IMPORTANT (car Session est dans utils)
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -27,8 +29,15 @@ public class ListeEvenementsController {
     @FXML private Button btnRechercher;
     @FXML private Button btnReset;
     @FXML private Button btnFiltrer;
+    @FXML private Button btnVoirDetails;
     @FXML private Button btnSupprimer;
     @FXML private Button btnAjouterBottom;
+
+    @FXML private ImageView bgImage;
+    @FXML private ImageView imgLogo;
+
+    // ✅ ChoiceBox role (USER/ADMIN)
+    @FXML private ChoiceBox<String> cbRole;
 
     private final EvenementService service = new EvenementService();
     private List<Evenement> all = new ArrayList<>();
@@ -36,40 +45,81 @@ public class ListeEvenementsController {
 
     @FXML
     public void initialize() {
-
-        System.out.println("ListeEvenements init OK");
+        SceneUtil.loadBackgroundImage(bgImage);
+        SceneUtil.loadLogoImage(imgLogo);
 
         // ✅ Combo Type
-        cbType.getItems().setAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
-        cbType.setValue("TOUS");
+        if (cbType != null) {
+            cbType.getItems().setAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
+            cbType.setValue("TOUS");
+        }
 
         // ✅ Combo Sort
-        cbSort.getItems().setAll("Titre", "Date début", "Type");
-        cbSort.setValue("Titre");
+        if (cbSort != null) {
+            cbSort.getItems().setAll("Titre", "Date début", "Type");
+            cbSort.setValue("Titre");
+        }
 
-        dpFrom.setValue(null);
-        dpTo.setValue(null);
+        if (dpFrom != null) dpFrom.setValue(null);
+        if (dpTo != null) dpTo.setValue(null);
+
+        // ✅ Role switch
+        initRoleChoiceBox();
+        applyRoleUi();
 
         // ✅ Bind buttons
         if (btnRechercher != null) btnRechercher.setOnAction(e -> onSearch());
         if (btnReset != null) btnReset.setOnAction(e -> onReset());
         if (btnFiltrer != null) btnFiltrer.setOnAction(e -> onFiltrer());
+        if (btnVoirDetails != null) btnVoirDetails.setOnAction(e -> onVoirDetails());
         if (btnSupprimer != null) btnSupprimer.setOnAction(e -> onSupprimer());
         if (btnAjouterBottom != null) btnAjouterBottom.setOnAction(e -> onGoAjouter());
 
         loadFromDB();
     }
 
+    // ===================== ROLE =====================
+
+    private void initRoleChoiceBox() {
+        if (cbRole == null) return;
+
+        cbRole.getItems().setAll("USER", "ADMIN");
+
+        // valeur par défaut
+        cbRole.setValue(Session.isAdmin() ? "ADMIN" : "USER");
+
+        cbRole.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
+            if (newV == null) return;
+
+            Session.setRole("ADMIN".equalsIgnoreCase(newV) ? Session.Role.ADMIN : Session.Role.USER);
+            applyRoleUi();
+
+            if (lblMsg != null) lblMsg.setText("✓ Mode: " + newV);
+        });
+    }
+
+    private void applyRoleUi() {
+        boolean admin = Session.isAdmin();
+
+        if (btnSupprimer != null) {
+            btnSupprimer.setVisible(admin);
+            btnSupprimer.setManaged(admin);
+        }
+        if (btnAjouterBottom != null) {
+            btnAjouterBottom.setVisible(admin);
+            btnAjouterBottom.setManaged(admin);
+        }
+    }
+
+    // ===================== DB =====================
+
     private void loadFromDB() {
         try {
             all = service.getAll();
-            System.out.println("✅ DB getAll() => " + all.size() + " événements");
-
             refreshCards(all);
-            lblMsg.setText("✓ " + all.size() + " événement(s)");
-
+            if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
         } catch (Exception ex) {
-            lblMsg.setText("❌ Erreur chargement DB");
+            if (lblMsg != null) lblMsg.setText("❌ Erreur chargement DB");
             ex.printStackTrace();
         }
     }
@@ -79,16 +129,13 @@ public class ListeEvenementsController {
         selected = null;
 
         if (events == null || events.isEmpty()) {
-            lblMsg.setText("ℹ️ Aucun événement à afficher");
+            if (lblMsg != null) lblMsg.setText("ℹ️ Aucun événement à afficher");
             return;
         }
 
-        // ✅ IMPORTANT: FXML est dans resources à la racine => "/EventCard.fxml"
         URL url = getClass().getResource("/EventCard.fxml");
-        System.out.println("EventCard URL = " + url);
-
         if (url == null) {
-            lblMsg.setText("❌ EventCard.fxml introuvable (resources)");
+            if (lblMsg != null) lblMsg.setText("❌ EventCard.fxml introuvable");
             throw new IllegalStateException("EventCard.fxml introuvable. Chemin attendu: /EventCard.fxml");
         }
 
@@ -98,24 +145,27 @@ public class ListeEvenementsController {
                 Node card = loader.load();
 
                 EventCardController c = loader.getController();
-                c.setData(ev, e -> {
-                    selected = e;
-                    lblMsg.setText("✓ Sélectionné: " + safe(e.getTitre()));
-                });
+                c.setData(ev,
+                        e -> {
+                            selected = e;
+                            if (lblMsg != null) lblMsg.setText("✓ Sélectionné: " + safe(e.getTitre()));
+                        },
+                        e -> {
+                            selected = e;
+                            SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", e.getIdEvent());
+                        }
+                );
 
                 flowEvents.getChildren().add(card);
 
             } catch (Exception ex) {
-                lblMsg.setText("❌ Erreur carte (EventCard)");
-                System.out.println("❌ EventCard load error: " + ex.getMessage());
+                if (lblMsg != null) lblMsg.setText("❌ Erreur carte (EventCard)");
                 ex.printStackTrace();
             }
         }
     }
 
-    // ==========================
-    // Actions
-    // ==========================
+    // ===================== ACTIONS =====================
 
     @FXML
     private void onGoAjouter() {
@@ -123,20 +173,24 @@ public class ListeEvenementsController {
     }
 
     @FXML
-    private void onRetour() {
-        SceneUtil.switchTo("/Home.fxml", "Home");
+    private void onVoirDetails() {
+        if (selected == null) {
+            if (lblMsg != null) lblMsg.setText("⚠️ Sélectionnez un événement.");
+            return;
+        }
+        SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", selected.getIdEvent());
     }
 
     @FXML
     private void onReset() {
-        txtSearch.clear();
-        cbType.setValue("TOUS");
-        cbSort.setValue("Titre");
-        dpFrom.setValue(null);
-        dpTo.setValue(null);
+        if (txtSearch != null) txtSearch.clear();
+        if (cbType != null) cbType.setValue("TOUS");
+        if (cbSort != null) cbSort.setValue("Titre");
+        if (dpFrom != null) dpFrom.setValue(null);
+        if (dpTo != null) dpTo.setValue(null);
 
         refreshCards(all);
-        lblMsg.setText("✓ " + all.size() + " événement(s)");
+        if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
     }
 
     @FXML
@@ -145,7 +199,7 @@ public class ListeEvenementsController {
 
         if (q.isEmpty()) {
             refreshCards(all);
-            lblMsg.setText("✓ " + all.size() + " événement(s)");
+            if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
             return;
         }
 
@@ -158,39 +212,22 @@ public class ListeEvenementsController {
                 .collect(Collectors.toList());
 
         refreshCards(filtered);
-        lblMsg.setText("✓ Résultats: " + filtered.size());
-    }
-
-    @FXML
-    private void onTrier() {
-        String sort = cbSort.getValue();
-        List<Evenement> tmp = new ArrayList<>(getCurrentFiltered());
-
-        if ("Titre".equals(sort)) {
-            tmp.sort(Comparator.comparing(e -> safe(e.getTitre()).toLowerCase(Locale.ROOT)));
-        } else if ("Date début".equals(sort)) {
-            tmp.sort(Comparator.comparing(e -> e.getDateDebut() == null ? LocalDateTime.MAX : e.getDateDebut()));
-        } else if ("Type".equals(sort)) {
-            tmp.sort(Comparator.comparing(e -> safe(e.getType()).toLowerCase(Locale.ROOT)));
-        }
-
-        refreshCards(tmp);
-        lblMsg.setText("✓ tri: " + sort);
+        if (lblMsg != null) lblMsg.setText("✓ Résultats: " + filtered.size());
     }
 
     @FXML
     private void onFiltrer() {
         List<Evenement> tmp = getCurrentFiltered();
 
-        String type = cbType.getValue();
+        String type = (cbType == null) ? "TOUS" : cbType.getValue();
         if (type != null && !"TOUS".equalsIgnoreCase(type)) {
             tmp = tmp.stream()
                     .filter(e -> type.equalsIgnoreCase(safe(e.getType())))
                     .collect(Collectors.toList());
         }
 
-        LocalDate from = dpFrom.getValue();
-        LocalDate to = dpTo.getValue();
+        LocalDate from = (dpFrom == null) ? null : dpFrom.getValue();
+        LocalDate to   = (dpTo == null) ? null : dpTo.getValue();
 
         if (from != null) {
             tmp = tmp.stream()
@@ -205,13 +242,18 @@ public class ListeEvenementsController {
         }
 
         refreshCards(tmp);
-        lblMsg.setText("✓ filtré: " + tmp.size());
+        if (lblMsg != null) lblMsg.setText("✓ filtré: " + tmp.size());
     }
 
     @FXML
     private void onSupprimer() {
+        if (!Session.isAdmin()) {
+            if (lblMsg != null) lblMsg.setText("⛔ Action réservée à l'admin.");
+            return;
+        }
+
         if (selected == null) {
-            lblMsg.setText("⚠️ Sélectionne un événement d’abord.");
+            if (lblMsg != null) lblMsg.setText("⚠️ Sélectionne un événement d’abord.");
             return;
         }
 
@@ -224,19 +266,17 @@ public class ListeEvenementsController {
             if (btn == ButtonType.OK) {
                 try {
                     service.delete(selected.getIdEvent());
-                    lblMsg.setText("✅ Supprimé");
+                    if (lblMsg != null) lblMsg.setText("✅ Supprimé");
                     loadFromDB();
                 } catch (Exception ex) {
-                    lblMsg.setText("❌ Erreur suppression");
+                    if (lblMsg != null) lblMsg.setText("❌ Erreur suppression");
                     ex.printStackTrace();
                 }
             }
         });
     }
 
-    // ==========================
-    // Helpers
-    // ==========================
+    // ===================== HELPERS =====================
 
     private List<Evenement> getCurrentFiltered() {
         String q = safe(txtSearch.getText()).toLowerCase(Locale.ROOT);

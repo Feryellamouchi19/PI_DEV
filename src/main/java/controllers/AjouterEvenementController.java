@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import services.EvenementService;
+import services.EventImageApi;
 import services.ImageAiService;
 
 import java.io.ByteArrayInputStream;
@@ -35,20 +36,27 @@ public class AjouterEvenementController {
 
     @FXML private TextField txtLieu;
 
+    // ✅ NEW
+    @FXML private TextField txtSpotifyUrl;
+
     @FXML private Label lblMsg;
     @FXML private Label lblImageName;
 
-    // ✅ Image preview
     @FXML private ImageView imgPreview;
+    @FXML private ImageView bgImage;
+    @FXML private ImageView imgLogo;
 
     private final EvenementService service = new EvenementService();
-    private final ImageAiService aiService = new ImageAiService();
+    private final EventImageApi imageApi = new EventImageApi();
 
     private String imageFileName = "logo.png";
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads", "images");
 
     @FXML
     public void initialize() {
+        SceneUtil.loadBackgroundImage(bgImage);
+        SceneUtil.loadLogoImage(imgLogo);
+
         cbType.getItems().setAll("SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
         cbType.setValue("SOIREE");
 
@@ -68,8 +76,6 @@ public class AjouterEvenementController {
         if (lblImageName != null) lblImageName.setText(imageFileName);
         showInfo("");
     }
-
-    // ===================== ACTIONS =====================
 
     @FXML
     private void onChooseImage(ActionEvent event) {
@@ -97,7 +103,6 @@ public class AjouterEvenementController {
             imageFileName = newName;
             if (lblImageName != null) lblImageName.setText(newName);
 
-            // afficher dans preview
             if (imgPreview != null) {
                 imgPreview.setImage(new Image(target.toUri().toString(), true));
             }
@@ -112,7 +117,6 @@ public class AjouterEvenementController {
 
     @FXML
     private void onGenerateImage(ActionEvent event) {
-
         String titre = safe(txtTitre.getText());
         String desc = safe(txtDesc.getText());
         String type = cbType.getValue() == null ? "" : cbType.getValue();
@@ -123,14 +127,12 @@ public class AjouterEvenementController {
             return;
         }
 
-        String prompt = buildPrompt(titre, desc, type, lieu);
-
         showInfo("⏳ Génération image IA ...");
 
         Task<ImageAiService.GeneratedImage> task = new Task<>() {
             @Override
             protected ImageAiService.GeneratedImage call() throws Exception {
-                return aiService.generateSaveAndGet(prompt, titre);
+                return imageApi.generateForEvent(titre, desc, type, lieu);
             }
         };
 
@@ -140,7 +142,6 @@ public class AjouterEvenementController {
 
             if (lblImageName != null) lblImageName.setText(gen.fileName);
 
-            // ✅ afficher l’image générée
             if (imgPreview != null && gen.bytes != null) {
                 Image img = new Image(new ByteArrayInputStream(gen.bytes));
                 imgPreview.setImage(img);
@@ -168,6 +169,13 @@ public class AjouterEvenementController {
         String desc = safe(txtDesc.getText());
         String type = cbType.getValue();
         String lieu = safe(txtLieu.getText());
+
+        // ✅ NEW
+        String spotifyUrl = safe(txtSpotifyUrl == null ? "" : txtSpotifyUrl.getText());
+        if (!spotifyUrl.isBlank() && !(spotifyUrl.startsWith("https://open.spotify.com/"))) {
+            showError("❌ Lien Spotify invalide (ex: https://open.spotify.com/playlist/...)");
+            return;
+        }
 
         if (titre.isBlank() || titre.length() < 3) { showError("❌ Titre invalide (min 3)."); return; }
         if (desc.isBlank() || desc.length() < 3) { showError("❌ Description invalide (min 3)."); return; }
@@ -200,6 +208,9 @@ public class AjouterEvenementController {
         ev.setDateFin(dateFin);
         ev.setLieu(lieu);
         ev.setImage(imageFileName);
+
+        // ✅ NEW
+        ev.setSpotifyUrl(spotifyUrl.isBlank() ? null : spotifyUrl);
 
         try {
             service.add(ev);
@@ -234,17 +245,6 @@ public class AjouterEvenementController {
     }
 
     // ===================== HELPERS =====================
-
-    private String buildPrompt(String titre, String desc, String type, String lieu) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Create a high-quality event poster image. ");
-        sb.append("Main title: ").append(titre).append(". ");
-        if (!type.isBlank()) sb.append("Event type: ").append(type).append(". ");
-        if (!lieu.isBlank()) sb.append("Location vibe: ").append(lieu).append(". ");
-        if (!desc.isBlank()) sb.append("Details: ").append(desc).append(". ");
-        sb.append("Professional design, clean layout, readable title, no explicit content.");
-        return sb.toString();
-    }
 
     private String safe(String s) { return s == null ? "" : s.trim(); }
 

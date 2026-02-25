@@ -21,10 +21,17 @@ public class EventCardController {
 
     private Evenement current;
     private Consumer<Evenement> onSelect;
+    private Consumer<Evenement> onDoubleClick;
 
+    /** Single click = selection, double click = ouvrir détails (si onDoubleClick fourni). */
     public void setData(Evenement e, Consumer<Evenement> onSelect) {
+        setData(e, onSelect, null);
+    }
+
+    public void setData(Evenement e, Consumer<Evenement> onSelect, Consumer<Evenement> onDoubleClick) {
         this.current = e;
         this.onSelect = onSelect;
+        this.onDoubleClick = onDoubleClick;
 
         if (rootCard == null || imgEvent == null || lblTitre == null || lblType == null) {
             throw new IllegalStateException("EventCard.fxml: fx:id manquant (rootCard/imgEvent/lblTitre/lblType)");
@@ -48,7 +55,12 @@ public class EventCardController {
         }
 
         rootCard.setOnMouseClicked(ev -> {
-            if (this.onSelect != null && current != null) this.onSelect.accept(current);
+            if (current == null) return;
+            if (ev.getClickCount() >= 2 && this.onDoubleClick != null) {
+                this.onDoubleClick.accept(current);
+            } else if (this.onSelect != null) {
+                this.onSelect.accept(current);
+            }
         });
     }
 

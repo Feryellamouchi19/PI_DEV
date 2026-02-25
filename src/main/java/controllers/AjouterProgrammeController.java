@@ -6,6 +6,7 @@ import interfaces.DataReceiver;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import services.EvenementService;
 import services.ProgrammeService;
 
@@ -28,6 +29,8 @@ public class AjouterProgrammeController implements DataReceiver<Integer> {
     @FXML private Spinner<Integer> spFinM;
 
     @FXML private Label lblMessage;
+    @FXML private ImageView bgImage;
+    @FXML private ImageView imgLogo;
 
     private final ProgrammeService programmeService = new ProgrammeService();
     private final EvenementService evenementService = new EvenementService();
@@ -42,7 +45,8 @@ public class AjouterProgrammeController implements DataReceiver<Integer> {
 
     @FXML
     public void initialize() {
-
+        SceneUtil.loadBackgroundImage(bgImage);
+        SceneUtil.loadLogoImage(imgLogo);
         spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 9));
         spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
         spFinH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 10));

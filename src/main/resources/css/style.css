@@ -73,6 +73,13 @@
     -fx-text-fill: rgba(229,231,235,0.72);
 }
 
+/* labels in forms */
+.chip{
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -muted;
+}
+
 /* header glass */
 .header-card{
     -fx-background-color: rgba(20,25,35,0.70);
@@ -131,16 +138,27 @@
 .text-field,
 .combo-box,
 .date-picker,
-.text-area{
+.text-area {
+
     -fx-background-color: rgba(255,255,255,0.07);
     -fx-background-radius: 14;
     -fx-border-radius: 14;
-    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-color: transparent;
     -fx-border-width: 1;
     -fx-padding: 10 12;
+
     -fx-text-fill: -text;
     -fx-prompt-text-fill: rgba(229,231,235,0.45);
+
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 14, 0.25, 0, 6);
+
+    /* ✅ IMPORTANT : supprime le fond blanc interne */
+    -fx-control-inner-background: rgba(255,255,255,0.07);
+}
+
+/* ✅ supprime définitivement le blanc du TextArea */
+.text-area .content {
+    -fx-background-color: transparent;
 }
 
 .text-field:focused,
@@ -356,4 +374,133 @@
 .event-lieu {
     -fx-text-fill: rgba(255,255,255,0.75);
     -fx-font-size: 12px;
+}
+
+/* ===== Détails Événement ===== */
+.detail-event-image {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 12, 0.2, 0, 6);
+}
+.detail-section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
+
+/* Programmes (lignes créées en code) */
+.prog-row { -fx-background-color: transparent; }
+.prog-time-box {
+    -fx-padding: 8 12;
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 10;
+}
+.prog-time {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: rgba(255,193,7,0.95);
+}
+.prog-card {
+    -fx-background-color: rgba(20,25,35,0.75);
+    -fx-background-radius: 12;
+    -fx-padding: 12 16;
+    -fx-border-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 1;
+}
+.prog-color-bar {
+    -fx-min-width: 4;
+    -fx-pref-width: 4;
+    -fx-background-color: rgba(255,193,7,0.8);
+    -fx-background-radius: 2;
+}
+.prog-title { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: white; }
+.prog-range { -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.7); }
+.prog-card-content { -fx-spacing: 4; }
+.qr-image {
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.14);
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 12, 0.2, 0, 6);
+}
+/* =========================
+   SPINNER (Heure / Minute)
+   ========================= */
+
+/* Le conteneur spinner */
+.spinner {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 14, 0.25, 0, 6);
+
+    /* évite fond interne blanc */
+    -fx-control-inner-background: rgba(255,255,255,0.07);
+}
+
+/* Zone texte interne (c'était blanc) */
+.spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: rgba(229,231,235,0.45);
+
+    -fx-padding: 10 10;
+}
+
+/* Boutons flèches */
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: rgba(255,255,255,0.10);
+    -fx-border-color: transparent;
+
+    /* coins à droite */
+    -fx-background-radius: 0 14 14 0;
+    -fx-padding: 6 8;
+}
+
+/* Couleur des flèches */
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: rgba(229,231,235,0.75);
+}
+
+/* Focus comme tes inputs */
+.spinner:focused {
+    -fx-border-color: -focus;
+    -fx-border-width: 1.4;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.22), 18, 0.30, 0, 8);
+}
+
+/* Hover */
+.spinner:hover {
+    -fx-background-color: rgba(255,255,255,0.09);
+}
+/* ✅ ChoiceBox visible (texte + fond) */
+.choice-box, .choice-box .label {
+    -fx-text-fill: -text;
+}
+
+.choice-box {
+    -fx-background-color: rgba(255,255,255,0.10);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.16);
+    -fx-border-width: 1;
+    -fx-padding: 6 10;
+}
+
+.choice-box .arrow {
+    -fx-background-color: rgba(229,231,235,0.75);
+}
+.choice-box .context-menu {
+    -fx-background-color: rgba(15,23,42,0.92);
+}
+.choice-box .menu-item .label {
+    -fx-text-fill: -text;
 }

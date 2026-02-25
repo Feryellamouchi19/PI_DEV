@@ -6,17 +6,11 @@
 <?import javafx.scene.layout.*?>
 
 <StackPane prefHeight="650.0" prefWidth="900.0"
-           stylesheets="@/css/style.css"
            xmlns="http://javafx.com/javafx/17.0.12"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.AjouterEvenementController">
 
-    <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false">
-        <image>
-            <Image url="@/images/space_bg.jpg" />
-        </image>
-    </ImageView>
-
+    <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
     <Pane styleClass="bg-overlay" />
 
     <BorderPane>
@@ -26,74 +20,82 @@
 
         <top>
             <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
-                <ImageView fitHeight="58" fitWidth="58" preserveRatio="true">
-                    <image>
-                        <Image url="@/images/logo.png" />
-                    </image>
-                </ImageView>
+                <ImageView fx:id="imgLogo" fitHeight="58" fitWidth="58" preserveRatio="true" />
                 <Label styleClass="title" text="Ajouter un Evenement" />
                 <Pane HBox.hgrow="ALWAYS"/>
             </HBox>
         </top>
 
         <center>
-            <VBox alignment="CENTER" spacing="14">
+            <ScrollPane fitToWidth="true" styleClass="glass-scroll">
+                <content>
+                    <VBox alignment="CENTER" spacing="16" styleClass="panel">
+                        <padding><Insets bottom="24" left="24" right="24" top="24" /></padding>
 
-                <Label fx:id="lblMsg" styleClass="subtitle" text="" />
+                        <Label fx:id="lblMsg" styleClass="subtitle" text="" />
 
-                <!-- ✅ Preview image -->
-                <ImageView fx:id="imgPreview"
-                           fitWidth="360" fitHeight="180"
-                           preserveRatio="true"
-                           smooth="true"
-                           pickOnBounds="true" />
+                        <Label styleClass="card-title" text="Image de l'événement" />
+                        <ImageView fx:id="imgPreview"
+                                   fitWidth="360" fitHeight="180"
+                                   preserveRatio="true"
+                                   smooth="true"
+                                   pickOnBounds="true" />
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Titre :" styleClass="chip"/>
-                    <TextField fx:id="txtTitre" promptText="Titre" prefWidth="520"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Titre :" styleClass="chip"/>
+                            <TextField fx:id="txtTitre" promptText="Titre" prefWidth="520"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Description :" styleClass="chip"/>
-                    <TextArea fx:id="txtDesc" promptText="Description" prefWidth="520" prefRowCount="3"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Description :" styleClass="chip"/>
+                            <TextArea fx:id="txtDesc" promptText="Description" prefWidth="520" prefRowCount="3"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Type :" styleClass="chip"/>
-                    <ComboBox fx:id="cbType" prefWidth="200"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Type :" styleClass="chip"/>
+                            <ComboBox fx:id="cbType" prefWidth="200"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Date Début :" styleClass="chip"/>
-                    <DatePicker fx:id="dpDebut" prefWidth="220"/>
-                    <Spinner fx:id="spDebutH" prefWidth="85"/>
-                    <Spinner fx:id="spDebutM" prefWidth="85"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Date Début :" styleClass="chip"/>
+                            <DatePicker fx:id="dpDebut" prefWidth="220"/>
+                            <Spinner fx:id="spDebutH" prefWidth="85"/>
+                            <Spinner fx:id="spDebutM" prefWidth="85"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Date Fin :" styleClass="chip"/>
-                    <DatePicker fx:id="dpFin" prefWidth="220"/>
-                    <Spinner fx:id="spFinH" prefWidth="85"/>
-                    <Spinner fx:id="spFinM" prefWidth="85"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Date Fin :" styleClass="chip"/>
+                            <DatePicker fx:id="dpFin" prefWidth="220"/>
+                            <Spinner fx:id="spFinH" prefWidth="85"/>
+                            <Spinner fx:id="spFinM" prefWidth="85"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Label text="Lieu :" styleClass="chip"/>
-                    <TextField fx:id="txtLieu" promptText="Lieu" prefWidth="520"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Lieu :" styleClass="chip"/>
+                            <TextField fx:id="txtLieu" promptText="Lieu" prefWidth="520"/>
+                        </HBox>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <Button text="Choisir image" styleClass="btn-secondary" onAction="#onChooseImage"/>
-                    <Button text="Générer image IA" styleClass="btn-secondary" onAction="#onGenerateImage"/>
-                    <Label fx:id="lblImageName" text="logo.png" styleClass="subtitle"/>
-                </HBox>
+                        <!-- ✅ NEW : Spotify Playlist URL -->
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Label text="Playlist Spotify :" styleClass="chip"/>
+                            <TextField fx:id="txtSpotifyUrl"
+                                       promptText="https://open.spotify.com/playlist/..."
+                                       prefWidth="520"/>
+                        </HBox>
 
-                <HBox spacing="16" alignment="CENTER">
-                    <Button text="Ajouter" styleClass="btn-primary" onAction="#onAjouterEvenement"/>
-                    <Button text="Retour" styleClass="btn-secondary" onAction="#onRetour"/>
-                </HBox>
+                        <HBox spacing="12" alignment="CENTER_LEFT">
+                            <Button text="Choisir image" styleClass="btn-secondary" onAction="#onChooseImage"/>
+                            <Button text="Générer image IA" styleClass="btn-secondary" onAction="#onGenerateImage"/>
+                            <Label fx:id="lblImageName" text="logo.png" styleClass="subtitle"/>
+                        </HBox>
 
-            </VBox>
+                        <HBox spacing="16" alignment="CENTER">
+                            <Button text="Ajouter" styleClass="btn-primary" onAction="#onAjouterEvenement"/>
+                            <Button text="Retour" styleClass="btn-secondary" onAction="#onRetour"/>
+                        </HBox>
+                    </VBox>
+                </content>
+            </ScrollPane>
         </center>
 
     </BorderPane>

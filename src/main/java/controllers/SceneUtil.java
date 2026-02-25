@@ -1,8 +1,12 @@
 package controllers;
 
+import interfaces.DataReceiver;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
 import java.net.URL;
@@ -21,6 +25,19 @@ public class SceneUtil {
         return stage;
     }
 
+    public static void loadBackgroundImage(ImageView imageView) {
+        if (imageView == null) return;
+        URL url = SceneUtil.class.getResource("/images/space_bg.png");
+        if (url == null) url = SceneUtil.class.getResource("/images/logo.png");
+        if (url != null) imageView.setImage(new Image(url.toExternalForm()));
+    }
+
+    public static void loadLogoImage(ImageView imageView) {
+        if (imageView == null) return;
+        URL url = SceneUtil.class.getResource("/images/logo.png");
+        if (url != null) imageView.setImage(new Image(url.toExternalForm()));
+    }
+
     public static void switchTo(String fxmlPath, String title) {
         switchToWithData(fxmlPath, title, null);
     }
@@ -29,7 +46,7 @@ public class SceneUtil {
         try {
             if (stage == null) {
                 throw new IllegalStateException(
-                        "Stage non initialisé. Dans ton Application.start(), appelle SceneUtil.setStage(primaryStage);"
+                        "Stage non initialisé. Dans Application.start(): SceneUtil.setStage(primaryStage);"
                 );
             }
 
@@ -37,22 +54,25 @@ public class SceneUtil {
             if (url == null) {
                 throw new IllegalStateException(
                         "FXML introuvable: " + fxmlPath +
-                                "\n➡️ Vérifie que le fichier est dans src/main/resources et que tu passes un chemin du style: /ListeEvenements.fxml"
+                                "\n➡️ Vérifie src/main/resources et le chemin: /ModifierEvenement.fxml"
                 );
             }
 
             FXMLLoader loader = new FXMLLoader(url);
+            loader.setClassLoader(SceneUtil.class.getClassLoader());
             Parent root = loader.load();
 
-            // Passer data si controller l'accepte
+            // ✅ passer data même si data == null (on laisse le controller décider)
             Object controller = loader.getController();
-            if (data != null && controller instanceof interfaces.DataReceiver<?> dr) {
+            if (controller instanceof DataReceiver<?> dr) {
                 @SuppressWarnings("unchecked")
-                interfaces.DataReceiver<T> receiver = (interfaces.DataReceiver<T>) dr;
+                DataReceiver<T> receiver = (DataReceiver<T>) dr;
                 receiver.setData(data);
             }
 
             Scene scene = new Scene(root);
+            URL cssUrl = SceneUtil.class.getResource("/css/style.css");
+            if (cssUrl != null) scene.getStylesheets().add(cssUrl.toExternalForm());
 
             stage.setTitle(title);
             stage.setScene(scene);
@@ -60,41 +80,16 @@ public class SceneUtil {
             stage.show();
 
         } catch (Exception e) {
-            System.out.println("❌ SceneUtil error: " + e.getMessage());
             e.printStackTrace();
+            showErrorPopup("Erreur d'ouverture de page", e.getMessage());
         }
     }
 
-    /** Optionnel : si tu veux récupérer le controller après chargement */
-    public static <C> C switchToAndReturnController(String fxmlPath, String title) {
-        try {
-            if (stage == null) {
-                throw new IllegalStateException("Stage non initialisé. Appelle SceneUtil.setStage(primaryStage).");
-            }
-
-            URL url = SceneUtil.class.getResource(fxmlPath);
-            if (url == null) {
-                throw new IllegalStateException("FXML introuvable: " + fxmlPath);
-            }
-
-            FXMLLoader loader = new FXMLLoader(url);
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root);
-
-            stage.setTitle(title);
-            stage.setScene(scene);
-            stage.centerOnScreen();
-            stage.show();
-
-            @SuppressWarnings("unchecked")
-            C controller = (C) loader.getController();
-            return controller;
-
-        } catch (Exception e) {
-            System.out.println("❌ SceneUtil error: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
+    private static void showErrorPopup(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(title);
+        a.setContentText(msg == null ? "Erreur inconnue" : msg);
+        a.showAndWait();
     }
 }

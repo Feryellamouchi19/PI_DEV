@@ -4,20 +4,27 @@ import java.time.LocalDateTime;
 
 public class Evenement {
 
-    private int idEvent;              // maps id_event
+    private int idEvent;              // id_event
     private String titre;
     private String description;
     private String type;
-    private LocalDateTime dateDebut;  // maps date_debut
-    private LocalDateTime dateFin;    // maps date_fin (nullable)
+    private LocalDateTime dateDebut;  // date_debut
+    private LocalDateTime dateFin;    // date_fin (nullable)
     private String lieu;
     private String image;
+    private String spotifyUrl;        // ✅ NEW -> spotify_url
 
     public Evenement() {}
 
-    public Evenement(String titre, String description, String type,
-                     LocalDateTime dateDebut, LocalDateTime dateFin,
-                     String lieu, String image) {
+    public Evenement(String titre,
+                     String description,
+                     String type,
+                     LocalDateTime dateDebut,
+                     LocalDateTime dateFin,
+                     String lieu,
+                     String image,
+                     String spotifyUrl) {
+
         this.titre = titre;
         this.description = description;
         this.type = type;
@@ -25,31 +32,89 @@ public class Evenement {
         this.dateFin = dateFin;
         this.lieu = lieu;
         this.image = image;
+        this.spotifyUrl = spotifyUrl;
     }
 
-    public int getIdEvent() { return idEvent; }
-    public void setIdEvent(int idEvent) { this.idEvent = idEvent; }
+    // =========================
+    // GETTERS & SETTERS
+    // =========================
 
-    public String getTitre() { return titre; }
-    public void setTitre(String titre) { this.titre = titre; }
+    public int getIdEvent() {
+        return idEvent;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setIdEvent(int idEvent) {
+        this.idEvent = idEvent;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public String getTitre() {
+        return titre;
+    }
 
-    public LocalDateTime getDateDebut() { return dateDebut; }
-    public void setDateDebut(LocalDateTime dateDebut) { this.dateDebut = dateDebut; }
+    public void setTitre(String titre) {
+        this.titre = titre;
+    }
 
-    public LocalDateTime getDateFin() { return dateFin; }
-    public void setDateFin(LocalDateTime dateFin) { this.dateFin = dateFin; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getLieu() { return lieu; }
-    public void setLieu(String lieu) { this.lieu = lieu; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public LocalDateTime getDateDebut() {
+        return dateDebut;
+    }
+
+    public void setDateDebut(LocalDateTime dateDebut) {
+        this.dateDebut = dateDebut;
+    }
+
+    public LocalDateTime getDateFin() {
+        return dateFin;
+    }
+
+    public void setDateFin(LocalDateTime dateFin) {
+        this.dateFin = dateFin;
+    }
+
+    public String getLieu() {
+        return lieu;
+    }
+
+    public void setLieu(String lieu) {
+        this.lieu = lieu;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    // ✅ NEW
+    public String getSpotifyUrl() {
+        return spotifyUrl;
+    }
+
+    public void setSpotifyUrl(String spotifyUrl) {
+        this.spotifyUrl = spotifyUrl;
+    }
+
+    // =========================
+    // toString
+    // =========================
 
     @Override
     public String toString() {
@@ -61,6 +126,7 @@ public class Evenement {
                 ", dateFin=" + dateFin +
                 ", lieu='" + lieu + '\'' +
                 ", image='" + image + '\'' +
+                ", spotifyUrl='" + spotifyUrl + '\'' +
                 '}';
     }
 }

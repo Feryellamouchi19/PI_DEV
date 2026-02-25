@@ -2,7 +2,6 @@ package services;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
-import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -177,70 +176,62 @@ public class ImageAiService {
     }
 
     /**
-     * Fallback local poster generator (always works).
-     * Creates a clean poster with title + short prompt text.
+     * Fallback: affiche événement bien designée (visuelle, pas de bloc de texte).
      */
     private static byte[] generateLocalPosterPng(String prompt, String title) throws Exception {
         int w = 768, h = 768;
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
 
-        // Quality
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        // Background gradient
-        GradientPaint gp = new GradientPaint(0, 0, new Color(20, 24, 33), w, h, new Color(80, 35, 65));
-        g.setPaint(gp);
+        // Fond: dégradé moderne (bleu nuit → violet)
+        GradientPaint bg = new GradientPaint(0, 0, new Color(15, 23, 42), w, h, new Color(88, 28, 135));
+        g.setPaint(bg);
         g.fillRect(0, 0, w, h);
 
-        // Overlay card
-        int pad = 48;
-        int cardX = pad;
-        int cardY = pad;
-        int cardW = w - pad * 2;
-        int cardH = h - pad * 2;
-
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.85f));
-        g.setColor(new Color(10, 12, 18));
-        g.fill(new RoundRectangle2D.Double(cardX, cardY, cardW, cardH, 36, 36));
-
+        // Formes décoratives (cercles flous / transparence)
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+        g.setColor(new Color(255, 193, 7));
+        g.fillOval(-80, h / 2 - 120, 320, 320);
+        g.setColor(new Color(99, 102, 241));
+        g.fillOval(w - 180, 80, 280, 280);
         g.setComposite(AlphaComposite.SrcOver);
 
-        // Title
+        // Bande diagonale style affiche
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.12f));
+        g.setColor(Color.WHITE);
+        int[] xDiag = { 0, w + 200, w - 100, -200 };
+        int[] yDiag = { h * 3 / 4, h + 100, h + 100, h };
+        g.fillPolygon(xDiag, yDiag, 4);
+        g.setComposite(AlphaComposite.SrcOver);
+
+        // Cadre léger
+        g.setColor(new Color(255, 255, 255, 40));
+        g.setStroke(new BasicStroke(2f));
+        g.drawRoundRect(24, 24, w - 48, h - 48, 32, 32);
+
+        // Titre unique, centré et mis en valeur (pas de paragraphe)
         String bigTitle = (title == null || title.isBlank()) ? "Event" : title;
-        Font titleFont = new Font("Segoe UI", Font.BOLD, 44);
+        bigTitle = truncate(bigTitle.replace('_', ' '), 20);
+        Font titleFont = new Font("Segoe UI", Font.BOLD, 72);
         g.setFont(titleFont);
         g.setColor(Color.WHITE);
 
-        int tx = cardX + 36;
-        int ty = cardY + 80;
-        g.drawString(truncate(bigTitle, 26), tx, ty);
+        FontRenderContext frc = g.getFontRenderContext();
+        java.awt.geom.Rectangle2D titleBounds = titleFont.getStringBounds(bigTitle, frc);
+        int tx = (int) ((w - titleBounds.getWidth()) / 2);
+        int ty = (int) (h / 2 + titleBounds.getHeight() / 3);
+        g.drawString(bigTitle, tx, ty);
 
-        // Subtitle
+        // Petite ligne "événement" sous le titre
         g.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        g.setColor(new Color(220, 220, 220));
-        g.drawString("Generated locally (API unavailable)", tx, ty + 34);
-
-        // Prompt text box
-        int boxY = ty + 70;
-        int boxH = cardH - (boxY - cardY) - 40;
-
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.15f));
-        g.setColor(Color.WHITE);
-        g.fillRoundRect(tx, boxY, cardW - 72, boxH, 24, 24);
-        g.setComposite(AlphaComposite.SrcOver);
-
-        g.setColor(new Color(240, 240, 240));
-        g.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-
-        List<String> lines = wrapText(prompt, g.getFont(), cardW - 120);
-        int ly = boxY + 44;
-        for (String line : lines) {
-            if (ly > boxY + boxH - 24) break;
-            g.drawString(line, tx + 18, ly);
-            ly += 28;
-        }
+        g.setColor(new Color(255, 255, 255, 180));
+        String sub = "É V É N E M E N T";
+        java.awt.geom.Rectangle2D subBounds = g.getFont().getStringBounds(sub, frc);
+        g.drawString(sub, (int) ((w - subBounds.getWidth()) / 2), ty + 44);
 
         g.dispose();
 

@@ -17,8 +17,8 @@ public class EvenementService {
 
     public void add(Evenement e) {
         String sql = """
-            INSERT INTO evenement (titre, description, type, date_debut, date_fin, lieu, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO evenement (titre, description, type, date_debut, date_fin, lieu, image, spotify_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -35,6 +35,11 @@ public class EvenementService {
 
             ps.setString(6, e.getLieu());
             ps.setString(7, e.getImage());
+
+            // ✅ spotify_url
+            String spotify = safe(e.getSpotifyUrl());
+            if (spotify.isBlank()) ps.setNull(8, Types.VARCHAR);
+            else ps.setString(8, spotify);
 
             ps.executeUpdate();
 
@@ -55,7 +60,7 @@ public class EvenementService {
         List<Evenement> list = new ArrayList<>();
 
         String sql = """
-            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url
             FROM evenement
             ORDER BY id_event DESC
         """;
@@ -77,7 +82,7 @@ public class EvenementService {
 
     public Evenement getOneById(int idEvent) {
         String sql = """
-            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url
             FROM evenement
             WHERE id_event = ?
         """;
@@ -100,7 +105,7 @@ public class EvenementService {
     public void update(Evenement e) {
         String sql = """
             UPDATE evenement
-            SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, image=?
+            SET titre=?, description=?, type=?, date_debut=?, date_fin=?, lieu=?, image=?, spotify_url=?
             WHERE id_event=?
         """;
 
@@ -118,7 +123,13 @@ public class EvenementService {
 
             ps.setString(6, e.getLieu());
             ps.setString(7, e.getImage());
-            ps.setInt(8, e.getIdEvent());
+
+            // ✅ spotify_url
+            String spotify = safe(e.getSpotifyUrl());
+            if (spotify.isBlank()) ps.setNull(8, Types.VARCHAR);
+            else ps.setString(8, spotify);
+
+            ps.setInt(9, e.getIdEvent());
 
             ps.executeUpdate();
 
@@ -149,11 +160,18 @@ public class EvenementService {
         e.setLieu(rs.getString("lieu"));
         e.setImage(rs.getString("image"));
 
+        // ✅ spotify_url
+        e.setSpotifyUrl(rs.getString("spotify_url"));
+
         Timestamp d1 = rs.getTimestamp("date_debut");
         Timestamp d2 = rs.getTimestamp("date_fin");
         if (d1 != null) e.setDateDebut(d1.toLocalDateTime());
         if (d2 != null) e.setDateFin(d2.toLocalDateTime());
 
         return e;
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s.trim();
     }
 }
