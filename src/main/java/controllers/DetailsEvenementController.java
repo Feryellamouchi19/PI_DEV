@@ -531,4 +531,5 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private String safe(String s) {
         return s == null ? "" : s.trim();
     }
+
 }

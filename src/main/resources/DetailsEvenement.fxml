@@ -190,6 +190,7 @@
                 <Button fx:id="btnRetour" text="Retour"
                         styleClass="btn-secondary"
                         onAction="#onRetour"/>
+
             </HBox>
         </bottom>
 
