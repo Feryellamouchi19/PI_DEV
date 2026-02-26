@@ -509,3 +509,89 @@
 .choice-box .menu-item .label {
     -fx-text-fill: -text;
 }
+/* =========================================================
+   DETAILS EVENEMENT - Upgrade look WITHOUT changing FXML
+   (à coller à la fin du fichier CSS)
+   ========================================================= */
+
+/* 1) Améliore la barre du bas (ton FXML utilise styleClass="panel")
+      donc on n'ajoute pas une nouvelle classe, on améliore juste le rendu
+      des boutons dans la barre du bas via le conteneur bottom (panel). */
+
+/* 2) Rendre tous les boutons plus "premium" */
+.button{
+    -fx-background-radius: 999;     /* pill */
+    -fx-border-radius: 999;
+    -fx-padding: 10 18;
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 16, 0.28, 0, 7);
+}
+
+/* Hover/pressed smooth (sans casser tes couleurs) */
+.button:hover{
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 20, 0.32, 0, 10);
+}
+.button:pressed{
+    -fx-translate-y: 1;
+}
+
+/* Focus glow clavier */
+.button:focused{
+    -fx-border-color: -focus;
+    -fx-border-width: 1.4;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.28), 18, 0.30, 0, 0);
+}
+
+/* 3) Upgrade btn-primary sans changer ton thème */
+.btn-primary{
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.22), 14, 0.22, 0, 6);
+}
+.btn-primary:hover{
+    -fx-background-color: -primary-hover;
+    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.30), 18, 0.25, 0, 8);
+}
+.btn-primary:pressed{
+    -fx-background-color: -primary-pressed;
+}
+
+/* 4) Upgrade btn-secondary (plus clean + border) */
+.btn-secondary{
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: rgba(255,255,255,0.22);
+    -fx-border-width: 1;
+    -fx-background-color: rgba(255,255,255,0.10);
+}
+.btn-secondary:hover{
+    -fx-background-color: rgba(255,255,255,0.16);
+    -fx-border-color: rgba(255,255,255,0.28);
+}
+
+/* 5) Upgrade btn-danger (plus premium) */
+.btn-danger{
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.22), 14, 0.22, 0, 6);
+}
+.btn-danger:hover{
+    -fx-background-color: -danger-hover;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.30), 18, 0.25, 0, 8);
+}
+
+/* 6) Optionnel: si tu veux que les boutons du bas aient la même hauteur */
+#userButtons .button, #adminButtons .button{
+    -fx-min-height: 38;
+}
+
+/* 7) Optionnel: si tu veux un look plus "bar" sur le panel du bas
+      (sans changer ton FXML, on cible le panel qui est en bas via BorderPane).
+      Si ça te gêne, supprime ce bloc. */
+.border-pane > .bottom .panel{
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 12 14;
+}

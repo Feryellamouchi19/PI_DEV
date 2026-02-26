@@ -16,6 +16,7 @@ import javafx.scene.layout.*;
 import services.EvenementService;
 import services.ProgrammeService;
 import services.SpotifyOEmbedService;
+import utils.Session; // ✅ IMPORTANT
 
 import java.awt.Desktop;
 import java.io.ByteArrayInputStream;
@@ -66,11 +67,16 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblQrInfo;
     @FXML private Button btnRegenQr;
 
-    // ✅ Meteo (tu as déjà ton WeatherService)
+    // ✅ Meteo
     @FXML private Label lblMeteo;
     private final services.WeatherService weatherService = new services.WeatherService();
 
-    // ✅ Spotify (doit matcher ton FXML)
+    // ✅ ✅ CITATION (NOUVEAU)
+    @FXML private Label lblQuote;
+    @FXML private Label lblQuoteAuthor;
+    private final services.QuoteService quoteService = new services.QuoteService();
+
+    // ✅ Spotify
     @FXML private VBox spotifyBox;
     @FXML private Label lblSpotifyMsg;
     @FXML private ImageView imgSpotifyCover;
@@ -78,8 +84,15 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblSpotifyProvider;
     @FXML private Button btnOpenSpotify;
 
-    // ✅ Admin buttons (pour cacher en mode USER)
+    // ✅ Admin buttons (caché en USER)
     @FXML private HBox adminButtons;
+
+    // ✅ USER buttons
+    @FXML private HBox userButtons;
+    @FXML private Button btnAddToGoogleCalendar;
+    @FXML private Button btnToggleNotif;
+
+    private boolean notificationsEnabled = false;
 
     private final EvenementService evenementService = new EvenementService();
     private ProgrammeService programmeService;
@@ -100,8 +113,13 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblQrInfo != null) lblQrInfo.setText("");
         if (lblMeteo != null) lblMeteo.setText("");
 
-        // cacher Spotify tant qu’on n’a pas l’event
         hideSpotifyBox();
+        updateNotifButtonText();
+
+        applyRoleUI(); // ✅ cache boutons si USER
+
+        // ✅ ✅ charger citation au démarrage
+        loadQuoteAsync();
     }
 
     @Override
@@ -111,10 +129,31 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             clearDetails();
             return;
         }
+
         this.eventId = id;
 
+        applyRoleUI(); // ✅ re-apply (au cas où role a changé)
         loadDetails();
         loadProgrammes();
+    }
+
+    // ===================== ✅ ROLE UI (IMPORTANT) =====================
+    private void applyRoleUI() {
+        boolean admin = Session.isAdmin();
+
+        // Cache toute la zone admin
+        if (adminButtons != null) {
+            adminButtons.setVisible(admin);
+            adminButtons.setManaged(admin);
+        }
+
+        // Le bouton "Regénérer QR" = admin only
+        if (btnRegenQr != null) {
+            btnRegenQr.setVisible(admin);
+            btnRegenQr.setManaged(admin);
+        }
+
+        System.out.println("DetailsEvenement ROLE = " + Session.getRole());
     }
 
     private void loadDetails() {
@@ -126,22 +165,22 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             return;
         }
 
-        lblTitre.setText(safe(event.getTitre()));
-        lblType.setText(safe(event.getType()));
-        lblLieu.setText(safe(event.getLieu()));
-        lblDebut.setText(event.getDateDebut() == null ? "—" : event.getDateDebut().format(F));
-        lblFin.setText(event.getDateFin() == null ? "—" : event.getDateFin().format(F));
-        lblDescription.setText(safe(event.getDescription()));
+        if (lblTitre != null) lblTitre.setText(safe(event.getTitre()));
+        if (lblType != null) lblType.setText(safe(event.getType()));
+        if (lblLieu != null) lblLieu.setText(safe(event.getLieu()));
+        if (lblDebut != null) lblDebut.setText(event.getDateDebut() == null ? "—" : event.getDateDebut().format(F));
+        if (lblFin != null) lblFin.setText(event.getDateFin() == null ? "—" : event.getDateFin().format(F));
+        if (lblDescription != null) lblDescription.setText(safe(event.getDescription()));
 
         loadEventImage(event.getImage());
 
-        // ✅ QR auto
+        // QR auto (même user peut voir le QR)
         onGenererQr();
 
-        // ✅ Météo auto
+        // météo
         loadMeteoAsync();
 
-        // ✅ Spotify auto
+        // spotify
         applySpotifyUI();
     }
 
@@ -171,12 +210,12 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     private void clearDetails() {
-        lblTitre.setText("—");
-        lblType.setText("—");
-        lblLieu.setText("—");
-        lblDebut.setText("—");
-        lblFin.setText("—");
-        lblDescription.setText("");
+        if (lblTitre != null) lblTitre.setText("—");
+        if (lblType != null) lblType.setText("—");
+        if (lblLieu != null) lblLieu.setText("—");
+        if (lblDebut != null) lblDebut.setText("—");
+        if (lblFin != null) lblFin.setText("—");
+        if (lblDescription != null) lblDescription.setText("");
         if (lblMeteo != null) lblMeteo.setText("");
 
         if (imgEvent != null) imgEvent.setImage(null);
@@ -197,6 +236,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             showError("ID événement invalide.");
             return;
         }
+        if (progContainer == null) return; // ✅ sécurité
 
         try {
             List<Programme> list = programmeService.getByEventId(eventId);
@@ -258,9 +298,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         card.getStyleClass().add("prog-card");
         HBox.setHgrow(details, Priority.ALWAYS);
 
+        // ✅ delete programme seulement admin (double clic)
         card.setOnMouseClicked(ev -> {
             if (ev.getClickCount() == 2) {
-                onDeleteProgramme(p);
+                if (Session.isAdmin()) onDeleteProgramme(p);
             }
         });
 
@@ -291,7 +332,72 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         });
     }
 
-    // ===================== ✅ QR CODE (sans ID) =====================
+    // ===================== ✅ GOOGLE CALENDAR =====================
+
+    @FXML
+    private void onAddToGoogleCalendar() {
+        if (event == null) {
+            showError("Aucun événement chargé.");
+            return;
+        }
+
+        try {
+            String title = safe(event.getTitre());
+            String location = safe(event.getLieu());
+            String details = safe(event.getDescription());
+
+            String datesParam = "";
+            if (event.getDateDebut() != null && event.getDateFin() != null) {
+                DateTimeFormatter gc = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+                String start = event.getDateDebut().format(gc);
+                String end = event.getDateFin().format(gc);
+                datesParam = "&dates=" + enc(start + "/" + end);
+            }
+
+            String url = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+                    + "&text=" + enc(title)
+                    + "&location=" + enc(location)
+                    + "&details=" + enc(details)
+                    + datesParam;
+
+            openUrl(url);
+            if (lblMsg != null) lblMsg.setText("✅ Ouverture Google Calendar...");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showError("Impossible d'ouvrir Google Calendar.");
+        }
+    }
+
+    private static String enc(String s) {
+        return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8);
+    }
+
+    private static void openUrl(String url) throws Exception {
+        if (Desktop.isDesktopSupported()) {
+            Desktop.getDesktop().browse(new URI(url));
+        } else {
+            Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", url});
+        }
+    }
+
+    // ===================== ✅ NOTIF =====================
+
+    @FXML
+    private void onToggleNotification() {
+        notificationsEnabled = !notificationsEnabled;
+        updateNotifButtonText();
+
+        if (lblMsg != null) {
+            lblMsg.setText(notificationsEnabled ? "🔔 Notification activée (démo)." : "🔕 Notification désactivée (démo).");
+        }
+    }
+
+    private void updateNotifButtonText() {
+        if (btnToggleNotif == null) return;
+        btnToggleNotif.setText(notificationsEnabled ? "Désactiver notification" : "Activer notification");
+    }
+
+    // ===================== ✅ QR =====================
 
     @FXML
     private void onGenererQr() {
@@ -356,7 +462,45 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         th.start();
     }
 
-    // ===================== ✅ SPOTIFY (COVER OFFICIELLE) =====================
+    // ===================== ✅ ✅ CITATION (API) =====================
+
+    private void loadQuoteAsync() {
+        if (lblQuote == null) return;
+
+        lblQuote.setText("⏳ Chargement citation...");
+        if (lblQuoteAuthor != null) lblQuoteAuthor.setText("");
+
+        Task<services.QuoteService.Quote> task = new Task<>() {
+            @Override
+            protected services.QuoteService.Quote call() throws Exception {
+                return quoteService.getRandomQuote();
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            var q = task.getValue();
+            if (q == null) {
+                lblQuote.setText("❌ Citation indisponible");
+                if (lblQuoteAuthor != null) lblQuoteAuthor.setText("");
+                return;
+            }
+            lblQuote.setText("“ " + q.text + " ”");
+            if (lblQuoteAuthor != null) {
+                lblQuoteAuthor.setText(q.author == null || q.author.isBlank() ? "" : "— " + q.author);
+            }
+        });
+
+        task.setOnFailed(e -> {
+            lblQuote.setText("❌ Citation indisponible");
+            if (lblQuoteAuthor != null) lblQuoteAuthor.setText("");
+        });
+
+        Thread th = new Thread(task, "quote-task");
+        th.setDaemon(true);
+        th.start();
+    }
+
+    // ===================== ✅ SPOTIFY =====================
 
     private void applySpotifyUI() {
         if (event == null) { hideSpotifyBox(); return; }
@@ -372,7 +516,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             return;
         }
 
-        // afficher bloc
         if (spotifyBox != null) {
             spotifyBox.setVisible(true);
             spotifyBox.setManaged(true);
@@ -384,7 +527,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (imgSpotifyCover != null) imgSpotifyCover.setImage(null);
         if (btnOpenSpotify != null) btnOpenSpotify.setDisable(false);
 
-        // charge title + cover via oEmbed
         loadSpotifyOEmbedAsync(url);
     }
 
@@ -407,7 +549,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             if (lblSpotifyTitle != null) lblSpotifyTitle.setText(safe(info.title));
             if (lblSpotifyProvider != null) lblSpotifyProvider.setText(safe(info.providerName));
 
-            // ✅ cover officielle -> download bytes (évite bug JavaFX https)
             if (imgSpotifyCover != null && info.thumbnailUrl != null && !info.thumbnailUrl.isBlank()) {
                 loadSpotifyCoverAsync(info.thumbnailUrl);
             } else {
@@ -425,7 +566,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         th.start();
     }
 
-    // ✅ Téléchargement cover Spotify (bytes -> Image)
     private void loadSpotifyCoverAsync(String imageUrl) {
         Task<Image> task = new Task<>() {
             @Override
@@ -531,5 +671,4 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private String safe(String s) {
         return s == null ? "" : s.trim();
     }
-
 }
