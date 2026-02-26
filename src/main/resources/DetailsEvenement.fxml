@@ -110,6 +110,26 @@
                                 <Label fx:id="lblQrInfo" styleClass="subtitle" text="" />
                             </VBox>
                         </HBox>
+                        <VBox spacing="6" styleClass="panel">
+                            <padding>
+                                <Insets top="12" right="14" bottom="12" left="14"/>
+                            </padding>
+
+                            <Label text="Localisation" styleClass="card-title"/>
+
+                            <HBox spacing="15">
+                                <Label text="Latitude:" styleClass="chip"/>
+                                <Label fx:id="lblLatitude"/>
+
+                                <Label text="Longitude:" styleClass="chip"/>
+                                <Label fx:id="lblLongitude"/>
+                            </HBox>
+
+                            <Button fx:id="btnOpenMap"
+                                    text="📍 Ouvrir dans Google Maps"
+                                    onAction="#onOpenMap"
+                                    styleClass="btn-primary"/>
+                        </VBox>
 
                         <!-- ===== Programmes ===== -->
                         <Label styleClass="card-title" text="Programmes" />

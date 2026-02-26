@@ -16,7 +16,10 @@ import javafx.scene.layout.*;
 import services.EvenementService;
 import services.ProgrammeService;
 import services.SpotifyOEmbedService;
-import utils.Session; // ✅ IMPORTANT
+import utils.Session;
+
+// ✅ services ajoutés
+import services.GeoCodingService;
 
 import java.awt.Desktop;
 import java.io.ByteArrayInputStream;
@@ -43,7 +46,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private final DateTimeFormatter H = DateTimeFormatter.ofPattern("HH:mm");
 
-    // ✅ HTTP client (utilisé pour cover Spotify + oEmbed)
     private final HttpClient http = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
@@ -71,10 +73,18 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblMeteo;
     private final services.WeatherService weatherService = new services.WeatherService();
 
-    // ✅ ✅ CITATION (NOUVEAU)
+    // ✅ ✅ CITATION
     @FXML private Label lblQuote;
     @FXML private Label lblQuoteAuthor;
     private final services.QuoteService quoteService = new services.QuoteService();
+
+    // ✅ ✅ LOCALISATION (NOUVEAU)
+    @FXML private Label lblLatitude;
+    @FXML private Label lblLongitude;
+    @FXML private Button btnOpenMap;
+
+    private final GeoCodingService geoService = new GeoCodingService();
+    private GeoCodingService.GeoPoint currentGeoPoint;
 
     // ✅ Spotify
     @FXML private VBox spotifyBox;
@@ -84,7 +94,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblSpotifyProvider;
     @FXML private Button btnOpenSpotify;
 
-    // ✅ Admin buttons (caché en USER)
+    // ✅ Admin buttons
     @FXML private HBox adminButtons;
 
     // ✅ USER buttons
@@ -100,7 +110,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private int eventId = 0;
     private Evenement event;
 
-    // ✅ Spotify service
     private final SpotifyOEmbedService spotifyService = new SpotifyOEmbedService();
 
     @FXML
@@ -116,9 +125,9 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         hideSpotifyBox();
         updateNotifButtonText();
 
-        applyRoleUI(); // ✅ cache boutons si USER
+        applyRoleUI();
 
-        // ✅ ✅ charger citation au démarrage
+        // ✅ citation au démarrage
         loadQuoteAsync();
     }
 
@@ -132,22 +141,20 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
         this.eventId = id;
 
-        applyRoleUI(); // ✅ re-apply (au cas où role a changé)
+        applyRoleUI();
         loadDetails();
         loadProgrammes();
     }
 
-    // ===================== ✅ ROLE UI (IMPORTANT) =====================
+    // ===================== ✅ ROLE UI =====================
     private void applyRoleUI() {
         boolean admin = Session.isAdmin();
 
-        // Cache toute la zone admin
         if (adminButtons != null) {
             adminButtons.setVisible(admin);
             adminButtons.setManaged(admin);
         }
 
-        // Le bouton "Regénérer QR" = admin only
         if (btnRegenQr != null) {
             btnRegenQr.setVisible(admin);
             btnRegenQr.setManaged(admin);
@@ -174,14 +181,68 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
         loadEventImage(event.getImage());
 
-        // QR auto (même user peut voir le QR)
         onGenererQr();
-
-        // météo
         loadMeteoAsync();
-
-        // spotify
         applySpotifyUI();
+
+        // ✅ ✅ LOCALISATION
+        loadLocationAsync();
+    }
+
+    // ===================== ✅ LOCALISATION =====================
+    private void loadLocationAsync() {
+        if (event == null || event.getLieu() == null || event.getLieu().isBlank()) return;
+
+        if (lblLatitude != null) lblLatitude.setText("⏳");
+        if (lblLongitude != null) lblLongitude.setText("⏳");
+        currentGeoPoint = null;
+
+        Task<GeoCodingService.GeoPoint> task = new Task<>() {
+            @Override
+            protected GeoCodingService.GeoPoint call() throws Exception {
+                return geoService.geocode(event.getLieu());
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            currentGeoPoint = task.getValue();
+            if (currentGeoPoint == null) {
+                if (lblLatitude != null) lblLatitude.setText("❌");
+                if (lblLongitude != null) lblLongitude.setText("❌");
+                return;
+            }
+
+            if (lblLatitude != null)  lblLatitude.setText(String.format("%.5f", currentGeoPoint.lat));
+            if (lblLongitude != null) lblLongitude.setText(String.format("%.5f", currentGeoPoint.lon));
+        });
+
+        task.setOnFailed(e -> {
+            if (lblLatitude != null) lblLatitude.setText("❌");
+            if (lblLongitude != null) lblLongitude.setText("❌");
+        });
+
+        Thread th = new Thread(task, "geo-task");
+        th.setDaemon(true);
+        th.start();
+    }
+
+    @FXML
+    private void onOpenMap() {
+        if (currentGeoPoint == null) {
+            if (lblMsg != null) lblMsg.setText("❌ Localisation indisponible");
+            return;
+        }
+
+        try {
+            String url = "https://www.google.com/maps?q=" + currentGeoPoint.lat + "," + currentGeoPoint.lon;
+
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(new URI(url));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            if (lblMsg != null) lblMsg.setText("❌ Impossible d'ouvrir Google Maps");
+        }
     }
 
     private void loadEventImage(String file) {
@@ -218,6 +279,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblDescription != null) lblDescription.setText("");
         if (lblMeteo != null) lblMeteo.setText("");
 
+        if (lblLatitude != null) lblLatitude.setText("");
+        if (lblLongitude != null) lblLongitude.setText("");
+        currentGeoPoint = null;
+
         if (imgEvent != null) imgEvent.setImage(null);
         if (imgQr != null) imgQr.setImage(null);
         if (lblQrInfo != null) lblQrInfo.setText("");
@@ -236,7 +301,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             showError("ID événement invalide.");
             return;
         }
-        if (progContainer == null) return; // ✅ sécurité
+        if (progContainer == null) return;
 
         try {
             List<Programme> list = programmeService.getByEventId(eventId);
@@ -298,7 +363,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         card.getStyleClass().add("prog-card");
         HBox.setHgrow(details, Priority.ALWAYS);
 
-        // ✅ delete programme seulement admin (double clic)
         card.setOnMouseClicked(ev -> {
             if (ev.getClickCount() == 2) {
                 if (Session.isAdmin()) onDeleteProgramme(p);
@@ -333,7 +397,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== ✅ GOOGLE CALENDAR =====================
-
     @FXML
     private void onAddToGoogleCalendar() {
         if (event == null) {
@@ -381,7 +444,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== ✅ NOTIF =====================
-
     @FXML
     private void onToggleNotification() {
         notificationsEnabled = !notificationsEnabled;
@@ -398,7 +460,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== ✅ QR =====================
-
     @FXML
     private void onGenererQr() {
         if (event == null) return;
@@ -432,7 +493,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== ✅ METEO =====================
-
     private void loadMeteoAsync() {
         if (lblMeteo == null || event == null || event.getDateDebut() == null) return;
 
@@ -462,8 +522,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         th.start();
     }
 
-    // ===================== ✅ ✅ CITATION (API) =====================
-
+    // ===================== ✅ CITATION =====================
     private void loadQuoteAsync() {
         if (lblQuote == null) return;
 
@@ -501,7 +560,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== ✅ SPOTIFY =====================
-
     private void applySpotifyUI() {
         if (event == null) { hideSpotifyBox(); return; }
 
@@ -637,7 +695,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== NAV =====================
-
     @FXML
     private void onAjouterProgramme() {
         SceneUtil.switchToWithData("/AjouterProgramme.fxml", "Ajouter Programme", eventId);
@@ -663,7 +720,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     }
 
     // ===================== HELPERS =====================
-
     private void showError(String msg) {
         if (lblMsg != null) lblMsg.setText("❌ " + msg);
     }
