@@ -39,3 +39,7 @@ build/
 # Secrets
 src/main/resources/credentials.json
 
+
+# OAuth / local tokens
+tokens/
+
