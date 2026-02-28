@@ -15,44 +15,47 @@ public class EventImageApi {
     public ImageAiService.GeneratedImage generateForEvent(String titre, String description, String type, String lieu) throws Exception {
         String prompt = buildPrompt(titre, description, type, lieu);
         String baseName = (titre == null || titre.isBlank()) ? "event" : titre.trim().replaceAll("[^a-zA-Z0-9-_]", "_");
-        return aiService.generateSaveAndGet(prompt, baseName);
+        return aiService.generateSaveAndGet(prompt, baseName, titre, description, type, lieu);
     }
 
     /**
-     * Construit un prompt anglais riche pour l'IA, basé sur le titre et la description,
-     * afin que l'image générée reflète fidèlement le contenu de l'événement.
+     * Construit un prompt optimisé pour une vraie affiche d'événement :
+     * style professionnel, scène visuelle riche, pas de texte dans l'image.
      */
     public static String buildPrompt(String titre, String desc, String type, String lieu) {
         StringBuilder sb = new StringBuilder();
 
-        // 1) Sujet principal : le titre décrit l'événement
+        // Style affiche réelle en premier (guide le modèle)
+        sb.append("Professional event poster, high quality, photorealistic or detailed illustration. ");
+        sb.append("Like a real concert poster or festival flyer. ");
+
+        // 1) Sujet principal
         String mainSubject = nullSafe(titre);
         if (!mainSubject.isBlank()) {
-            sb.append("Event poster depicting: ").append(mainSubject).append(". ");
+            sb.append("Main subject: ").append(mainSubject).append(". ");
         }
 
-        // 2) Description : scène visuelle détaillée (jusqu'à 180 caractères pour plus de contexte)
+        // 2) Scène visuelle issue de la description
         String sceneDesc = extractSceneFromDescription(desc);
         if (!sceneDesc.isBlank()) {
-            sb.append("Scene and mood: ").append(sceneDesc).append(". ");
+            sb.append("Scene: ").append(sceneDesc).append(". ");
         }
 
-        // 3) Mots-clés visuels selon le type d'événement
+        // 3) Éléments visuels selon le type
         String typeVisuals = getTypeVisualKeywords(type);
         if (!typeVisuals.isBlank()) {
             sb.append("Visual elements: ").append(typeVisuals).append(". ");
         }
 
-        // 4) Lieu / ambiance
+        // 4) Lieu / décor
         if (lieu != null && !lieu.isBlank()) {
             sb.append("Setting: ").append(lieu.trim()).append(". ");
         }
 
-        // 5) Style et contraintes
-        sb.append("Modern graphic design, bold colors, clean composition, ");
-        sb.append("illustrated or photorealistic style, professional event poster. ");
+        // 5) Contraintes
+        sb.append("Vibrant colors, dynamic composition, artistic. ");
         sb.append("No text, no words, no letters in the image. ");
-        sb.append("Safe for work, no explicit content.");
+        sb.append("Safe for work.");
 
         return sb.toString();
     }

@@ -7,15 +7,22 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import services.EquipmentService;
 import services.EvenementService;
 import services.EventImageApi;
 import services.ImageAiService;
+import utils.Session;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,14 +49,22 @@ public class AjouterEvenementController {
     @FXML private Label lblMsg;
     @FXML private Label lblImageName;
 
+    @FXML private VBox boxEquipment;
+    @FXML private Label lblEquipmentHint;
+    @FXML private TextField txtEquipment;
+    @FXML private FlowPane flowEquipmentSuggestions;
+    @FXML private FlowPane flowEquipmentSelected;
+
     @FXML private ImageView imgPreview;
     @FXML private ImageView bgImage;
     @FXML private ImageView imgLogo;
 
     private final EvenementService service = new EvenementService();
+    private final EquipmentService equipmentService = new EquipmentService();
     private final EventImageApi imageApi = new EventImageApi();
 
     private String imageFileName = "logo.png";
+    private final List<String> equipmentSelected = new ArrayList<>();
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads", "images");
 
     @FXML
@@ -59,6 +74,10 @@ public class AjouterEvenementController {
 
         cbType.getItems().setAll("SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
         cbType.setValue("SOIREE");
+        cbType.getSelectionModel().selectedItemProperty().addListener((o, oldV, newV) -> refreshEquipmentSuggestions());
+
+        applyEquipmentVisibility();
+        refreshEquipmentSuggestions();
 
         spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 9));
         spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
@@ -198,6 +217,9 @@ public class AjouterEvenementController {
                 showError("❌ Date fin doit être après date début.");
                 return;
             }
+        } else if ("SOIREE".equalsIgnoreCase(type)) {
+            // Pour une soirée, date fin par défaut : début + 4h
+            dateFin = dateDebut.plusHours(4);
         }
 
         Evenement ev = new Evenement();
@@ -214,6 +236,9 @@ public class AjouterEvenementController {
 
         try {
             service.add(ev);
+            if (ev.getIdEvent() > 0 && !equipmentSelected.isEmpty() && Session.isAdmin()) {
+                equipmentService.addAll(ev.getIdEvent(), equipmentSelected);
+            }
             showSuccess("✅ Événement ajouté !");
         } catch (Exception ex) {
             showError("❌ Erreur DB ajout événement");
@@ -242,6 +267,75 @@ public class AjouterEvenementController {
     @FXML
     private void onRetour(ActionEvent event) {
         SceneUtil.switchTo("/ListeEvenements.fxml", "Liste des Événements");
+    }
+
+    @FXML
+    private void onAddEquipment(ActionEvent event) {
+        String custom = txtEquipment != null ? safe(txtEquipment.getText()) : "";
+        if (!custom.isBlank()) {
+            addEquipmentItem(custom);
+            if (txtEquipment != null) txtEquipment.clear();
+            return;
+        }
+        showInfo("Saisissez un équipement ou cliquez sur une suggestion.");
+    }
+
+    private void applyEquipmentVisibility() {
+        if (boxEquipment != null) {
+            boolean admin = Session.isAdmin();
+            boxEquipment.setVisible(admin);
+            boxEquipment.setManaged(admin);
+        }
+    }
+
+    private void refreshEquipmentSuggestions() {
+        if (flowEquipmentSuggestions == null) return;
+        flowEquipmentSuggestions.getChildren().clear();
+
+        String type = cbType.getValue() == null ? "" : cbType.getValue();
+        List<String> suggestions = EquipmentService.getSuggestionsByType(type);
+
+        if (lblEquipmentHint != null) {
+            String hint = switch (type.toUpperCase(Locale.ROOT)) {
+                case "CAMPING" -> "Tente, sac de couchage, lampe...";
+                case "RANDONNEE" -> "Chaussures de marche, sac à dos, bâtons...";
+                case "SOIREE" -> "Dress code, déguisement, maquillage...";
+                case "SEJOUR" -> "Valise, trousse de toilette...";
+                default -> "Sélectionnez ou ajoutez des équipements";
+            };
+            lblEquipmentHint.setText(hint);
+        }
+
+        for (String s : suggestions) {
+            Button btn = new Button("+ " + s);
+            btn.getStyleClass().add("chip");
+            btn.setOnAction(e -> addEquipmentItem(s));
+            flowEquipmentSuggestions.getChildren().add(btn);
+        }
+    }
+
+    private void addEquipmentItem(String libelle) {
+        if (libelle == null || libelle.trim().isBlank()) return;
+        String lib = libelle.trim();
+        if (equipmentSelected.contains(lib)) return;
+        equipmentSelected.add(lib);
+        refreshEquipmentSelected();
+    }
+
+    private void removeEquipmentItem(String libelle) {
+        equipmentSelected.remove(libelle);
+        refreshEquipmentSelected();
+    }
+
+    private void refreshEquipmentSelected() {
+        if (flowEquipmentSelected == null) return;
+        flowEquipmentSelected.getChildren().clear();
+        for (String lib : equipmentSelected) {
+            Button chip = new Button("✕ " + lib);
+            chip.getStyleClass().add("chip");
+            chip.setOnAction(e -> removeEquipmentItem(lib));
+            flowEquipmentSelected.getChildren().add(chip);
+        }
     }
 
     // ===================== HELPERS =====================

@@ -85,6 +85,19 @@
                                        prefWidth="520"/>
                         </HBox>
 
+                        <!-- Équipements (admin) -->
+                        <VBox fx:id="boxEquipment" spacing="10" visible="true" managed="true">
+                            <Label styleClass="card-title" text="Équipements / À prévoir" />
+                            <Label fx:id="lblEquipmentHint" styleClass="subtitle" text="Sélectionnez ou ajoutez les équipements selon le type d'événement" />
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <TextField fx:id="txtEquipment" promptText="Ex: Tente, Sac de couchage..." prefWidth="300"/>
+                                <Button text="+ Ajouter" styleClass="btn-secondary" onAction="#onAddEquipment"/>
+                            </HBox>
+                            <FlowPane fx:id="flowEquipmentSuggestions" hgap="8" vgap="8" prefWrapLength="500"/>
+                            <Label styleClass="chip" text="Sélectionnés :"/>
+                            <FlowPane fx:id="flowEquipmentSelected" hgap="8" vgap="8" prefWrapLength="500"/>
+                        </VBox>
+
                         <HBox spacing="12" alignment="CENTER_LEFT">
                             <Button text="Choisir image" styleClass="btn-secondary" onAction="#onChooseImage"/>
                             <Button text="Générer image IA" styleClass="btn-secondary" onAction="#onGenerateImage"/>

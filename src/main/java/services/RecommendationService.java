@@ -61,14 +61,21 @@ public class RecommendationService {
             if (hay.contains(kw)) s += 30;
         }
 
-        // Si l'utilisateur n'a rien filtré, score 0 (éviter recommandations aléatoires)
+        // Si l'utilisateur n'a rien filtré, on donne quand même un score pour les "suggestions"
+        // (événements à venir, par proximité de date)
         boolean noFilter =
                 (c.getType() == null || c.getType().isBlank() || "TOUS".equalsIgnoreCase(c.getType())) &&
                         c.getDateFrom() == null &&
                         c.getDateTo() == null &&
                         (c.getKeyword() == null || c.getKeyword().isBlank());
 
-        if (noFilter) return 0;
+        if (noFilter) {
+            // Suggestions : événements à venir (priorité aux plus proches)
+            if (e.getDateDebut() != null && e.getDateDebut().isAfter(java.time.LocalDateTime.now())) {
+                return 10; // score minimal pour apparaître en suggestions
+            }
+            return 0;
+        }
 
         return s;
     }

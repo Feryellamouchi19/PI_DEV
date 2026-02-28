@@ -72,6 +72,17 @@
                                       GridPane.rowIndex="5" GridPane.columnIndex="1"/>
                         </GridPane>
 
+                        <VBox fx:id="boxEquipment" spacing="8" visible="true" managed="true">
+                            <Label styleClass="card-title" text="Équipements / À prévoir" />
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <TextField fx:id="txtEquipment" promptText="Ex: Tente, Sac de couchage..." prefWidth="280"/>
+                                <Button text="+ Ajouter" styleClass="btn-secondary" onAction="#onAddEquipment"/>
+                            </HBox>
+                            <FlowPane fx:id="flowEquipmentSuggestions" hgap="8" vgap="8" prefWrapLength="500"/>
+                            <Label styleClass="chip" text="Sélectionnés :"/>
+                            <FlowPane fx:id="flowEquipmentSelected" hgap="8" vgap="8" prefWrapLength="500"/>
+                        </VBox>
+
                         <Separator opacity="0.35"/>
 
                         <HBox alignment="CENTER_RIGHT" spacing="12">

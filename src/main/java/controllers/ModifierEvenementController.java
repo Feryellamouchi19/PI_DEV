@@ -1,12 +1,19 @@
 package controllers;
 
+import entities.Equipment;
 import entities.Evenement;
 import interfaces.DataReceiver;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import services.EquipmentService;
 import services.EvenementService;
+import utils.Session;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,9 +37,16 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
 
     @FXML private Label lblMsg;
 
+    @FXML private VBox boxEquipment;
+    @FXML private TextField txtEquipment;
+    @FXML private FlowPane flowEquipmentSuggestions;
+    @FXML private FlowPane flowEquipmentSelected;
+
     private final EvenementService evenementService = new EvenementService();
+    private final EquipmentService equipmentService = new EquipmentService();
     private int eventId;
     private Evenement event;
+    private final List<String> equipmentSelected = new ArrayList<>();
 
     @FXML
     public void initialize() {
@@ -78,6 +92,9 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
             spFinM.getValueFactory().setValue(event.getDateFin().getMinute());
         }
 
+        applyEquipmentVisibility();
+        loadEquipmentForEdit();
+
         lblMsg.setText("✓ Modification: " + safe(event.getTitre()));
     }
 
@@ -121,7 +138,13 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
         event.setDateFin(fin);
 
         try {
-            evenementService.update(event); // ⚠️ doit exister
+            evenementService.update(event);
+            if (Session.isAdmin()) {
+                equipmentService.deleteByEventId(eventId);
+                if (!equipmentSelected.isEmpty()) {
+                    equipmentService.addAll(eventId, equipmentSelected);
+                }
+            }
             lblMsg.setText("✅ Modifié !");
             SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", eventId);
         } catch (Exception ex) {
@@ -133,6 +156,68 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
     @FXML
     private void onAnnuler() {
         SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", eventId);
+    }
+
+    private void applyEquipmentVisibility() {
+        if (boxEquipment != null) {
+            boolean admin = Session.isAdmin();
+            boxEquipment.setVisible(admin);
+            boxEquipment.setManaged(admin);
+        }
+    }
+
+    private void loadEquipmentForEdit() {
+        equipmentSelected.clear();
+        List<Equipment> list = equipmentService.getByEventId(eventId);
+        if (list != null) for (Equipment e : list) equipmentSelected.add(safe(e.getLibelle()));
+
+        refreshEquipmentSuggestions();
+        refreshEquipmentSelected();
+    }
+
+    private void refreshEquipmentSuggestions() {
+        if (flowEquipmentSuggestions == null) return;
+        flowEquipmentSuggestions.getChildren().clear();
+        String type = safe(txtType.getText());
+        for (String s : EquipmentService.getSuggestionsByType(type)) {
+            Button btn = new Button("+ " + s);
+            btn.getStyleClass().add("chip");
+            btn.setOnAction(e -> addEquipmentItem(s));
+            flowEquipmentSuggestions.getChildren().add(btn);
+        }
+    }
+
+    private void refreshEquipmentSelected() {
+        if (flowEquipmentSelected == null) return;
+        flowEquipmentSelected.getChildren().clear();
+        for (String lib : equipmentSelected) {
+            Button chip = new Button("✕ " + lib);
+            chip.getStyleClass().add("chip");
+            chip.setOnAction(e -> removeEquipmentItem(lib));
+            flowEquipmentSelected.getChildren().add(chip);
+        }
+    }
+
+    @FXML
+    private void onAddEquipment() {
+        String custom = txtEquipment != null ? safe(txtEquipment.getText()) : "";
+        if (!custom.isBlank()) {
+            addEquipmentItem(custom);
+            if (txtEquipment != null) txtEquipment.clear();
+        }
+    }
+
+    private void addEquipmentItem(String libelle) {
+        if (libelle == null || libelle.trim().isBlank()) return;
+        String lib = libelle.trim();
+        if (equipmentSelected.contains(lib)) return;
+        equipmentSelected.add(lib);
+        refreshEquipmentSelected();
+    }
+
+    private void removeEquipmentItem(String libelle) {
+        equipmentSelected.remove(libelle);
+        refreshEquipmentSelected();
     }
 
     private String safe(String s) {

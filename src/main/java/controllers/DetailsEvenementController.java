@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import services.EquipmentService;
 import services.EvenementService;
 import services.EventImageApi;
 import services.ImageAiService;
@@ -36,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 // HTTP
@@ -67,6 +69,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblImageIaMsg;
 
     @FXML private VBox progContainer;
+
+    @FXML private VBox boxEquipmentBanner;
+    @FXML private Label lblEquipmentTitle;
+    @FXML private FlowPane flowEquipment;
 
     // ✅ QR
     @FXML private ImageView imgQr;
@@ -109,6 +115,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private boolean notificationsEnabled = false;
 
     private final EvenementService evenementService = new EvenementService();
+    private final EquipmentService equipmentService = new EquipmentService();
     private ProgrammeService programmeService;
 
     private int eventId = 0;
@@ -193,6 +200,8 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         loadEventImage(event.getImage());
         if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
+        loadEquipmentBanner();
+
         onGenererQr();
         loadMeteoAsync();
         applySpotifyUI();
@@ -255,6 +264,42 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             ex.printStackTrace();
             if (lblMsg != null) lblMsg.setText("❌ Impossible d'ouvrir Google Maps");
         }
+    }
+
+    private void loadEquipmentBanner() {
+        if (boxEquipmentBanner == null || flowEquipment == null) return;
+
+        List<entities.Equipment> list = equipmentService.getByEventId(eventId);
+
+        if (list == null || list.isEmpty()) {
+            // Afficher les suggestions par défaut selon le type
+            String type = event != null ? safe(event.getType()).toUpperCase(Locale.ROOT) : "";
+            List<String> suggestions = EquipmentService.getSuggestionsByType(type);
+            if (suggestions.isEmpty()) {
+                boxEquipmentBanner.setVisible(false);
+                boxEquipmentBanner.setManaged(false);
+                return;
+            }
+            if (lblEquipmentTitle != null) lblEquipmentTitle.setText("📋 Suggestions pour ce type d'événement");
+            flowEquipment.getChildren().clear();
+            for (String s : suggestions) {
+                Label chip = new Label("• " + s);
+                chip.getStyleClass().add("chip");
+                chip.setStyle("-fx-text-fill: white; -fx-background-color: rgba(255,255,255,0.2); -fx-padding: 6 12; -fx-background-radius: 4;");
+                flowEquipment.getChildren().add(chip);
+            }
+        } else {
+            if (lblEquipmentTitle != null) lblEquipmentTitle.setText("📋 À prévoir pour cet événement");
+            flowEquipment.getChildren().clear();
+            for (entities.Equipment eq : list) {
+                Label chip = new Label("✓ " + safe(eq.getLibelle()));
+                chip.getStyleClass().add("chip");
+                chip.setStyle("-fx-text-fill: white; -fx-background-color: rgba(255,255,255,0.25); -fx-padding: 6 12; -fx-background-radius: 4;");
+                flowEquipment.getChildren().add(chip);
+            }
+        }
+        boxEquipmentBanner.setVisible(true);
+        boxEquipmentBanner.setManaged(true);
     }
 
     private void loadEventImage(String file) {
@@ -361,6 +406,12 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
         if (progContainer != null) progContainer.getChildren().clear();
+
+        if (boxEquipmentBanner != null) {
+            boxEquipmentBanner.setVisible(false);
+            boxEquipmentBanner.setManaged(false);
+        }
+        if (flowEquipment != null) flowEquipment.getChildren().clear();
 
         hideSpotifyBox();
     }

@@ -122,7 +122,7 @@ public class ListeEvenementsController {
             all = service.getAll();
             refreshCards(all);
             clearSelection();
-            updateRecoVisibilityAndContent(Collections.emptyList());
+            updateRecoAfterLoad();
             if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
         } catch (Exception ex) {
             if (lblMsg != null) lblMsg.setText("❌ Erreur chargement DB");
@@ -252,14 +252,26 @@ public class ListeEvenementsController {
     }
 
     private void updateRecoVisibilityAndContent(List<Evenement> rec) {
-        boolean show = hasAnyFilterApplied() && rec != null && !rec.isEmpty();
-        setRecoVisible(show);
+        if (rec == null) rec = Collections.emptyList();
+        setRecoVisible(true); // Toujours afficher la section recommandations
 
-        if (show) {
-            refreshRecommended(rec);
+        if (rec.isEmpty()) {
+            if (lblReco != null) lblReco.setText(hasAnyFilterApplied()
+                    ? "⭐ Recommandés pour vous (aucun)"
+                    : "⭐ Suggestions (événements à venir)");
+            if (flowRecommended != null) flowRecommended.getChildren().clear();
         } else {
-            refreshRecommended(Collections.emptyList());
+            refreshRecommended(rec);
         }
+    }
+
+    /** Appelé après loadFromDB : affiche les suggestions (événements à venir) */
+    private void updateRecoAfterLoad() {
+        FilterCriteria c = new FilterCriteria();
+        c.setType("TOUS");
+        // filtered=empty pour ne pas exclure : on affiche les suggestions (événements à venir)
+        List<Evenement> rec = recoService.recommendFromFilter(c, all, Collections.emptyList(), 6);
+        updateRecoVisibilityAndContent(rec);
     }
 
     // ===================== ACTIONS =====================
@@ -287,7 +299,7 @@ public class ListeEvenementsController {
         if (dpTo != null) dpTo.setValue(null);
 
         refreshCards(all);
-        updateRecoVisibilityAndContent(Collections.emptyList());
+        updateRecoAfterLoad();
 
         if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
     }
@@ -298,7 +310,7 @@ public class ListeEvenementsController {
 
         if (q.isEmpty()) {
             refreshCards(all);
-            updateRecoVisibilityAndContent(Collections.emptyList());
+            updateRecoAfterLoad();
             if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
             return;
         }
@@ -317,6 +329,8 @@ public class ListeEvenementsController {
         FilterCriteria c = new FilterCriteria();
         c.setKeyword(safe(txtSearch.getText()));
         c.setType(cbType == null ? "TOUS" : cbType.getValue());
+        if (dpFrom != null && dpFrom.getValue() != null) c.setDateFrom(dpFrom.getValue().atStartOfDay());
+        if (dpTo != null && dpTo.getValue() != null) c.setDateTo(dpTo.getValue().atTime(23, 59, 59));
 
         List<Evenement> rec = recoService.recommendFromFilter(c, all, filtered, 6);
         updateRecoVisibilityAndContent(rec);

@@ -105,8 +105,8 @@
                                       vgap="18"
                                       prefWrapLength="820"/>
 
-                            <!-- ✅ RECO (cachable) -->
-                            <VBox fx:id="boxReco" spacing="10" visible="false" managed="false">
+                            <!-- ✅ RECO (toujours visible) -->
+                            <VBox fx:id="boxReco" spacing="10" visible="true" managed="true">
                                 <Label fx:id="lblReco"
                                        text="⭐ Recommandés pour vous"
                                        styleClass="subtitle"/>
