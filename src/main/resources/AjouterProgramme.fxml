@@ -6,12 +6,14 @@
 <?import javafx.scene.layout.*?>
 
 <StackPane prefHeight="650.0" prefWidth="900.0"
-           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controllers.AjouterProgrammeController">
+           fx:controller="controllers.AjouterProgrammeController"
+           stylesheets="@css/style.css"
+           styleClass="app-root">
 
+    <!-- Background -->
     <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
-
     <Pane styleClass="bg-overlay"/>
 
     <BorderPane>
@@ -19,43 +21,80 @@
             <Insets top="26" right="26" bottom="26" left="26"/>
         </padding>
 
-        <center>
-            <VBox alignment="TOP_CENTER" spacing="16">
+        <!-- Header -->
+        <top>
+            <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
+                <padding>
+                    <Insets bottom="16" left="18" right="18" top="16" />
+                </padding>
 
-                <HBox alignment="CENTER" spacing="16">
-                    <ImageView fx:id="imgLogo" fitHeight="78" fitWidth="78" preserveRatio="true" />
+                <ImageView fx:id="imgLogo" fitHeight="58" fitWidth="58" preserveRatio="true" />
+
+                <VBox spacing="3">
                     <Label text="Ajouter Programme" styleClass="title"/>
-                </HBox>
+                    <Label fx:id="lblEventInfo" text="—" styleClass="subtitle"/>
+                </VBox>
 
-                <Label fx:id="lblEventInfo" text="—" styleClass="subtitle"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+            </HBox>
+        </top>
 
-                <TextField fx:id="txtTitre" promptText="Titre du programme" maxWidth="620"/>
+        <!-- Content -->
+        <center>
+            <ScrollPane fitToWidth="true" styleClass="glass-scroll">
+                <content>
+                    <VBox spacing="16" styleClass="panel" alignment="TOP_CENTER" maxWidth="760">
+                        <padding>
+                            <Insets top="22" right="22" bottom="22" left="22"/>
+                        </padding>
 
-                <Label text="Date début" styleClass="subtitle"/>
+                        <!-- Message -->
+                        <Label fx:id="lblMessage" text="" styleClass="subtitle"/>
 
-                <HBox spacing="10" alignment="CENTER">
-                    <DatePicker fx:id="dpDebut" prefWidth="220"/>
-                    <Spinner fx:id="spDebutH" prefWidth="85"/>
-                    <Spinner fx:id="spDebutM" prefWidth="85"/>
-                </HBox>
+                        <!-- Card form -->
+                        <VBox spacing="14" styleClass="panel" maxWidth="720">
+                            <padding>
+                                <Insets top="18" right="18" bottom="18" left="18"/>
+                            </padding>
 
-                <Label text="Date fin" styleClass="subtitle"/>
+                            <Label text="Informations du programme" styleClass="card-title"/>
 
-                <HBox spacing="10" alignment="CENTER">
-                    <DatePicker fx:id="dpFin" prefWidth="220"/>
-                    <Spinner fx:id="spFinH" prefWidth="85"/>
-                    <Spinner fx:id="spFinM" prefWidth="85"/>
-                </HBox>
+                            <HBox spacing="12" alignment="CENTER_LEFT">
+                                <Label text="Titre :" styleClass="chip"/>
+                                <TextField fx:id="txtTitre"
+                                           promptText="Titre du programme"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
 
-                <HBox spacing="16" alignment="CENTER">
-                    <!-- ✅ IMPORTANT -->
-                    <Button text="Ajouter" styleClass="btn-primary" onAction="#onAjouterProgramme"/>
-                    <Button text="Retour" styleClass="btn-secondary" onAction="#onRetour"/>
-                </HBox>
+                            <Separator opacity="0.25"/>
 
-                <Label fx:id="lblMessage" text="" styleClass="subtitle"/>
+                            <Label text="Date début" styleClass="subtitle"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <DatePicker fx:id="dpDebut" prefWidth="240"/>
+                                <Spinner fx:id="spDebutH" prefWidth="90"/>
+                                <Spinner fx:id="spDebutM" prefWidth="90"/>
+                            </HBox>
 
-            </VBox>
+                            <Label text="Date fin" styleClass="subtitle"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <DatePicker fx:id="dpFin" prefWidth="240"/>
+                                <Spinner fx:id="spFinH" prefWidth="90"/>
+                                <Spinner fx:id="spFinM" prefWidth="90"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Actions -->
+                        <HBox spacing="12" alignment="CENTER_RIGHT" maxWidth="720">
+                            <Button text="Retour" styleClass="btn-secondary" onAction="#onRetour"/>
+                            <Button text="Ajouter" styleClass="btn-primary" onAction="#onAjouterProgramme"/>
+                        </HBox>
+
+                        <!-- Hint -->
+                        <Label text="Astuce: double-clic sur un programme (dans Détails) pour le supprimer (admin)."
+                               styleClass="subtitle"/>
+                    </VBox>
+                </content>
+            </ScrollPane>
         </center>
 
     </BorderPane>

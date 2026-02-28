@@ -8,11 +8,11 @@
 <StackPane prefHeight="650.0" prefWidth="900.0"
            xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controllers.ModifierEvenementController">
+           fx:controller="controllers.ModifierEvenementController"
+           stylesheets="@css/style.css"
+           styleClass="app-root">
 
-    <!-- ✅ Background -->
     <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
-    <!-- ✅ Overlay (ne bloque pas les clics) -->
     <Pane styleClass="bg-overlay" mouseTransparent="true" />
 
     <BorderPane>
@@ -20,7 +20,6 @@
             <Insets top="26" right="26" bottom="26" left="26"/>
         </padding>
 
-        <!-- Header -->
         <top>
             <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
                 <VBox spacing="3">
@@ -31,7 +30,6 @@
             </HBox>
         </top>
 
-        <!-- Content -->
         <center>
             <ScrollPane fitToWidth="true" styleClass="glass-scroll">
                 <content>
@@ -86,5 +84,4 @@
         </center>
 
     </BorderPane>
-
 </StackPane>

@@ -1,52 +1,40 @@
 /* ============================================
    PI_DEV - Events (Dark / Glass / Premium)
-   Works with: ListeEvenements.fxml + EventCard.fxml
-   JavaFX 21+
+   Compatible: ListeEvenements.fxml + EventCard.fxml
    ============================================ */
 
-.root{
-    -fx-font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
+.root, .app-root{
+    -fx-font-family: "Segoe UI","Roboto","Arial",sans-serif;
     -fx-font-size: 13px;
 
-    /* base */
     -app-bg: #0B1220;
     -overlay: rgba(10, 15, 25, 0.55);
 
-    /* glass surfaces */
     -glass: rgba(20,25,35,0.68);
-    -glass-strong: rgba(20,25,35,0.80);
     -stroke: rgba(255,255,255,0.16);
 
-    /* text */
     -text: #E5E7EB;
     -muted: rgba(229,231,235,0.70);
 
-    /* primary */
     -primary: #FFC107;
     -primary-hover: #FFB300;
     -primary-pressed: #FFA000;
 
-    /* focus */
     -focus: rgba(59,130,246,0.70);
 
-    /* danger */
     -danger: #EF4444;
     -danger-hover: #DC2626;
-
-    /* shadows */
-    -shadow1: rgba(0,0,0,0.45);
-    -shadow2: rgba(0,0,0,0.70);
 
     -fx-background-color: -app-bg;
 }
 
-/* containers transparent by default */
+/* containers */
 .border-pane, .anchor-pane, .stack-pane, .vbox, .hbox, .grid-pane { -fx-background-color: transparent; }
 
-/* overlay behind content */
+/* overlay */
 .bg-overlay{ -fx-background-color: -overlay; }
 
-/* typography */
+/* text */
 .label{ -fx-text-fill: -text; }
 
 .title{
@@ -54,30 +42,18 @@
     -fx-font-weight: 900;
     -fx-text-fill: -text;
 }
-
 .subtitle{
     -fx-font-size: 13px;
     -fx-font-weight: 700;
     -fx-text-fill: -muted;
 }
-
-.card-title{
-    -fx-font-size: 15px;
-    -fx-font-weight: 900;
-    -fx-text-fill: white;
-}
-
-.card-sub{
-    -fx-font-size: 12px;
-    -fx-font-weight: 700;
-    -fx-text-fill: rgba(229,231,235,0.72);
-}
-
-/* labels in forms */
 .chip{
     -fx-font-size: 13px;
-    -fx-font-weight: 700;
-    -fx-text-fill: -muted;
+    -fx-font-weight: 800;
+    -fx-text-fill: rgba(229,231,235,0.85);
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-background-radius: 999;
+    -fx-padding: 6 10;
 }
 
 /* header glass */
@@ -91,7 +67,7 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 28, 0.30, 0, 12);
 }
 
-/* filters glass panel */
+/* panel glass */
 .panel{
     -fx-background-color: -glass;
     -fx-background-radius: 20;
@@ -99,52 +75,11 @@
     -fx-border-color: -stroke;
     -fx-border-width: 1;
     -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, -shadow2, 26, 0.30, 0, 10);
-}
-
-/* ---------- Event Card (premium) ---------- */
-.event-card{
-    -fx-background-color: rgba(20,25,35,0.78); /* + opaque */
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-    -fx-border-color: rgba(255,255,255,0.16);
-    -fx-border-width: 1;
-    -fx-padding: 12;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.33, 0, 12);
-}
-
-.event-card:hover{
-    -fx-background-color: rgba(20,25,35,0.88);
-    -fx-border-color: rgba(255,255,255,0.22);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.80), 30, 0.35, 0, 16);
-}
-
-.event-card:focused{
-    -fx-border-color: -focus;
-    -fx-border-width: 1.6;
-}
-.event-card.selected {
-    -fx-border-color: #FFC107;
-    -fx-border-width: 2;
-    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.35), 18, 0.25, 0, 0);
-}
-
-/* badge */
-.badge{
-    -fx-background-radius: 999;
-    -fx-padding: 4 10;
-    -fx-font-size: 11px;
-    -fx-font-weight: 900;
-    -fx-text-fill: #111827;
-    -fx-background-color: -primary;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 26, 0.30, 0, 10);
 }
 
 /* inputs */
-.text-field,
-.combo-box,
-.date-picker,
-.text-area {
-
+.text-field, .combo-box, .date-picker, .text-area, .choice-box{
     -fx-background-color: rgba(255,255,255,0.07);
     -fx-background-radius: 14;
     -fx-border-radius: 14;
@@ -156,35 +91,20 @@
     -fx-prompt-text-fill: rgba(229,231,235,0.45);
 
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 14, 0.25, 0, 6);
-
-    /* ✅ IMPORTANT : supprime le fond blanc interne */
     -fx-control-inner-background: rgba(255,255,255,0.07);
 }
 
-/* ✅ supprime définitivement le blanc du TextArea */
-.text-area .content {
-    -fx-background-color: transparent;
-}
+.text-area .content{ -fx-background-color: transparent; }
 
-.text-field:focused,
-.combo-box:focused,
-.date-picker:focused,
-.text-area:focused{
+.text-field:focused, .combo-box:focused, .date-picker:focused, .text-area:focused, .choice-box:focused{
     -fx-border-color: -focus;
     -fx-border-width: 1.4;
     -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.22), 18, 0.30, 0, 8);
 }
 
-.combo-box .arrow-button,
-.date-picker .arrow-button{ -fx-background-color: transparent; }
-.combo-box .arrow,
-.date-picker .arrow{ -fx-background-color: rgba(229,231,235,0.65); }
-
-/* Fix weird yellow area in combobox */
-.combo-box-base{
-    -fx-background-insets: 0;
-    -fx-background-color: rgba(255,255,255,0.07);
-}
+/* ChoiceBox text */
+.choice-box, .choice-box .label { -fx-text-fill: -text; }
+.choice-box .arrow{ -fx-background-color: rgba(229,231,235,0.75); }
 
 /* buttons */
 .button{
@@ -194,7 +114,6 @@
     -fx-border-radius: 14;
     -fx-padding: 10 18;
 }
-
 .btn-primary{
     -fx-background-color: -primary;
     -fx-text-fill: #111827;
@@ -217,27 +136,19 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 14, 0.28, 0, 6);
 }
 .btn-danger:hover{ -fx-background-color: -danger-hover; }
-
 .button:disabled{ -fx-opacity: 0.55; -fx-cursor: default; }
 
-/* ScrollPane transparent */
-.glass-scroll{
-    -fx-background-color: transparent;
-    -fx-background: transparent;
-    -fx-padding: 0;
-}
-.glass-scroll > .viewport{ -fx-background-color: transparent; }
-.scroll-pane{ -fx-background-color: transparent; }
-.scroll-pane > .viewport{ -fx-background-color: transparent; }
+/* scroll transparent */
+.glass-scroll, .scroll-pane{ -fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent; }
+.glass-scroll > .viewport, .scroll-pane > .viewport{ -fx-background-color: transparent; }
 
-/* ComboBox popup dark */
+/* combo popup dark */
 .combo-box-popup .list-view{
     -fx-background-color: rgba(15,23,42,0.92);
     -fx-background-radius: 12;
     -fx-border-radius: 12;
     -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 22, 0.30, 0, 10);
 }
 .combo-box-popup .list-cell{ -fx-background-color: transparent; -fx-text-fill: #E5E7EB; }
 .combo-box-popup .list-cell:hover{ -fx-background-color: rgba(255,255,255,0.08); }
@@ -246,22 +157,14 @@
     -fx-text-fill: #FFF7D1;
 }
 
-/* DatePicker popup dark */
+/* datepicker popup dark */
 .date-picker-popup{
     -fx-background-color: rgba(15,23,42,0.94);
     -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 24, 0.30, 0, 12);
-}
-.date-picker-popup .month-year-pane{ -fx-background-color: rgba(255,255,255,0.06); }
-.date-picker-popup .day-cell{ -fx-text-fill: #E5E7EB; }
-.date-picker-popup .day-cell:hover{ -fx-background-color: rgba(255,255,255,0.10); }
-.date-picker-popup .day-cell:selected{
-    -fx-background-color: rgba(255,193,7,0.35);
-    -fx-text-fill: #FFF7D1;
 }
 
-/* Scrollbar */
+/* scrollbar */
 .scroll-bar:vertical .track, .scroll-bar:horizontal .track{
     -fx-background-color: rgba(255,255,255,0.06);
     -fx-background-radius: 999;
@@ -281,147 +184,50 @@
     -fx-shape: "";
     -fx-padding: 0;
 }
-/* ============================= */
-/*         EVENT CARD            */
-/* ============================= */
 
-.event-card {
-    -fx-background-color: rgba(15, 23, 42, 0.70);
-    -fx-background-radius: 22;
-    -fx-border-radius: 22;
-    -fx-border-color: rgba(255,255,255,0.10);
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.50), 22, 0.30, 0, 10);
-}
-
-.event-card:hover {
-    -fx-border-color: rgba(255, 193, 7, 0.60);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 28, 0.35, 0, 14);
-}
-
-.event-card-selected {
-    -fx-border-color: rgba(59,130,246,0.85);
-    -fx-border-width: 2;
-}
-
-.event-card-inner {
-    -fx-background-color: transparent;
-}
-
-.event-image-wrapper {
+/* ===================== Event Card ===================== */
+.event-card{
+    -fx-background-color: rgba(20,25,35,0.78);
     -fx-background-radius: 18;
     -fx-border-radius: 18;
-    -fx-background-color: rgba(255,255,255,0.05);
-}
-
-.event-image {
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-}
-
-.event-title {
-    -fx-font-size: 18px;
-    -fx-font-weight: 900;
-    -fx-text-fill: white;
-}
-
-.event-date {
-    -fx-font-size: 13px;
-    -fx-text-fill: rgba(255,255,255,0.70);
-}
-
-.event-badge {
-    -fx-background-color: rgba(255, 193, 7, 0.95);
-    -fx-text-fill: #111827;
-    -fx-font-weight: 900;
-    -fx-padding: 4 14 4 14;
-    -fx-background-radius: 999;
-}
-/* ===== Event Card ===== */
-.event-card {
-    -fx-background-radius: 22;
-    -fx-border-radius: 22;
-    -fx-padding: 0;
-    -fx-cursor: hand;
-
-    -fx-background-color: rgba(255,255,255,0.08);
-    -fx-border-color: rgba(255,255,255,0.14);
+    -fx-border-color: rgba(255,255,255,0.16);
     -fx-border-width: 1;
-
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 8);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.33, 0, 12);
 }
-
-.event-card-inner {
-    -fx-background-radius: 22;
+.event-card:hover{
+    -fx-background-color: rgba(20,25,35,0.88);
+    -fx-border-color: rgba(255,255,255,0.22);
 }
-
-.event-card-selected {
-    -fx-border-color: rgba(255,193,7,0.85);
+.event-card.selected{
+    -fx-border-color: #FFC107;
     -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.35), 18, 0.25, 0, 0);
 }
 
-.event-cover {
+.event-card-inner{ -fx-background-color: transparent; }
+.event-cover{
     -fx-background-radius: 16;
     -fx-border-radius: 16;
 }
-
-.event-title {
-    -fx-text-fill: white;
+.event-title{
     -fx-font-size: 16px;
-    -fx-font-weight: 700;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
 }
-
-.event-type {
+.event-type{
+    -fx-font-size: 12px;
     -fx-text-fill: rgba(255,255,255,0.85);
-    -fx-font-size: 12px;
 }
-
-.event-lieu {
-    -fx-text-fill: rgba(255,255,255,0.75);
-    -fx-font-size: 12px;
-}
-
-/* ===== Détails Événement ===== */
 .detail-event-image {
     -fx-background-radius: 16;
     -fx-border-radius: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 12, 0.2, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.40), 12, 0.2, 0, 6);
 }
 .detail-section-title {
     -fx-font-size: 18px;
     -fx-font-weight: 900;
     -fx-text-fill: white;
 }
-
-/* Programmes (lignes créées en code) */
-.prog-row { -fx-background-color: transparent; }
-.prog-time-box {
-    -fx-padding: 8 12;
-    -fx-background-color: rgba(255,255,255,0.06);
-    -fx-background-radius: 10;
-}
-.prog-time {
-    -fx-font-size: 14px;
-    -fx-font-weight: 700;
-    -fx-text-fill: rgba(255,193,7,0.95);
-}
-.prog-card {
-    -fx-background-color: rgba(20,25,35,0.75);
-    -fx-background-radius: 12;
-    -fx-padding: 12 16;
-    -fx-border-radius: 12;
-    -fx-border-color: rgba(255,255,255,0.1);
-    -fx-border-width: 1;
-}
-.prog-color-bar {
-    -fx-min-width: 4;
-    -fx-pref-width: 4;
-    -fx-background-color: rgba(255,193,7,0.8);
-    -fx-background-radius: 2;
-}
-.prog-title { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: white; }
-.prog-range { -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.7); }
-.prog-card-content { -fx-spacing: 4; }
 .qr-image {
     -fx-background-radius: 14;
     -fx-border-radius: 14;
@@ -429,169 +235,88 @@
     -fx-border-width: 1;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 12, 0.2, 0, 6);
 }
+/* ===== Messages (success / error) ===== */
+.success{
+    -fx-text-fill: rgba(34,197,94,0.95); /* vert */
+    -fx-font-weight: 900;
+}
+.error{
+    -fx-text-fill: rgba(239,68,68,0.95); /* rouge */
+    -fx-font-weight: 900;
+}
+
+/* Optionnel: un petit style pour rendre le champ titre plus important */
+#txtTitre{
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
 /* =========================
-   SPINNER (Heure / Minute)
+   PROGRAMMES - Timeline Cards
    ========================= */
 
-/* Le conteneur spinner */
-.spinner {
-    -fx-background-color: rgba(255,255,255,0.07);
+.prog-row{
+    -fx-padding: 2 0 2 0;
+}
+
+.prog-time-box{
+    -fx-min-width: 84;
+    -fx-pref-width: 84;
+    -fx-background-color: rgba(255,255,255,0.06);
     -fx-background-radius: 14;
     -fx-border-radius: 14;
-    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-color: rgba(255,255,255,0.12);
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.38), 14, 0.25, 0, 6);
-
-    /* évite fond interne blanc */
-    -fx-control-inner-background: rgba(255,255,255,0.07);
+    -fx-padding: 10 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 10, 0.25, 0, 4);
 }
 
-/* Zone texte interne (c'était blanc) */
-.spinner .text-field {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-border-color: transparent;
-
-    -fx-text-fill: -text;
-    -fx-prompt-text-fill: rgba(229,231,235,0.45);
-
-    -fx-padding: 10 10;
-}
-
-/* Boutons flèches */
-.spinner .increment-arrow-button,
-.spinner .decrement-arrow-button {
-    -fx-background-color: rgba(255,255,255,0.10);
-    -fx-border-color: transparent;
-
-    /* coins à droite */
-    -fx-background-radius: 0 14 14 0;
-    -fx-padding: 6 8;
-}
-
-/* Couleur des flèches */
-.spinner .increment-arrow-button .increment-arrow,
-.spinner .decrement-arrow-button .decrement-arrow {
-    -fx-background-color: rgba(229,231,235,0.75);
-}
-
-/* Focus comme tes inputs */
-.spinner:focused {
-    -fx-border-color: -focus;
-    -fx-border-width: 1.4;
-    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.22), 18, 0.30, 0, 8);
-}
-
-/* Hover */
-.spinner:hover {
-    -fx-background-color: rgba(255,255,255,0.09);
-}
-/* ✅ ChoiceBox visible (texte + fond) */
-.choice-box, .choice-box .label {
-    -fx-text-fill: -text;
-}
-
-.choice-box {
-    -fx-background-color: rgba(255,255,255,0.10);
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
-    -fx-border-color: rgba(255,255,255,0.16);
-    -fx-border-width: 1;
-    -fx-padding: 6 10;
-}
-
-.choice-box .arrow {
-    -fx-background-color: rgba(229,231,235,0.75);
-}
-.choice-box .context-menu {
-    -fx-background-color: rgba(15,23,42,0.92);
-}
-.choice-box .menu-item .label {
-    -fx-text-fill: -text;
-}
-/* =========================================================
-   DETAILS EVENEMENT - Upgrade look WITHOUT changing FXML
-   (à coller à la fin du fichier CSS)
-   ========================================================= */
-
-/* 1) Améliore la barre du bas (ton FXML utilise styleClass="panel")
-      donc on n'ajoute pas une nouvelle classe, on améliore juste le rendu
-      des boutons dans la barre du bas via le conteneur bottom (panel). */
-
-/* 2) Rendre tous les boutons plus "premium" */
-.button{
-    -fx-background-radius: 999;     /* pill */
-    -fx-border-radius: 999;
-    -fx-padding: 10 18;
-    -fx-font-size: 13px;
+.prog-time{
+    -fx-font-size: 14px;
     -fx-font-weight: 900;
-
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 16, 0.28, 0, 7);
+    -fx-text-fill: rgba(255,193,7,0.95);
 }
 
-/* Hover/pressed smooth (sans casser tes couleurs) */
-.button:hover{
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 20, 0.32, 0, 10);
-}
-.button:pressed{
-    -fx-translate-y: 1;
-}
-
-/* Focus glow clavier */
-.button:focused{
-    -fx-border-color: -focus;
-    -fx-border-width: 1.4;
-    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.28), 18, 0.30, 0, 0);
-}
-
-/* 3) Upgrade btn-primary sans changer ton thème */
-.btn-primary{
-    -fx-background-radius: 999;
-    -fx-border-radius: 999;
-    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.22), 14, 0.22, 0, 6);
-}
-.btn-primary:hover{
-    -fx-background-color: -primary-hover;
-    -fx-effect: dropshadow(gaussian, rgba(255,193,7,0.30), 18, 0.25, 0, 8);
-}
-.btn-primary:pressed{
-    -fx-background-color: -primary-pressed;
-}
-
-/* 4) Upgrade btn-secondary (plus clean + border) */
-.btn-secondary{
-    -fx-background-radius: 999;
-    -fx-border-radius: 999;
-    -fx-border-color: rgba(255,255,255,0.22);
+.prog-card{
+    -fx-background-color: rgba(20,25,35,0.75);
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: rgba(255,255,255,0.12);
     -fx-border-width: 1;
-    -fx-background-color: rgba(255,255,255,0.10);
-}
-.btn-secondary:hover{
-    -fx-background-color: rgba(255,255,255,0.16);
-    -fx-border-color: rgba(255,255,255,0.28);
-}
-
-/* 5) Upgrade btn-danger (plus premium) */
-.btn-danger{
-    -fx-background-radius: 999;
-    -fx-border-radius: 999;
-    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.22), 14, 0.22, 0, 6);
-}
-.btn-danger:hover{
-    -fx-background-color: -danger-hover;
-    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.30), 18, 0.25, 0, 8);
-}
-
-/* 6) Optionnel: si tu veux que les boutons du bas aient la même hauteur */
-#userButtons .button, #adminButtons .button{
-    -fx-min-height: 38;
-}
-
-/* 7) Optionnel: si tu veux un look plus "bar" sur le panel du bas
-      (sans changer ton FXML, on cible le panel qui est en bas via BorderPane).
-      Si ça te gêne, supprime ce bloc. */
-.border-pane > .bottom .panel{
-    -fx-background-radius: 999;
-    -fx-border-radius: 999;
     -fx-padding: 12 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.50), 16, 0.28, 0, 8);
+}
+
+.prog-card:hover{
+    -fx-background-color: rgba(20,25,35,0.85);
+    -fx-border-color: rgba(255,193,7,0.35);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.70), 18, 0.30, 0, 10);
+}
+
+.prog-color-bar{
+    -fx-min-width: 4;
+    -fx-pref-width: 4;
+    -fx-background-color: rgba(255,193,7,0.85);
+    -fx-background-radius: 3;
+}
+
+.prog-card-content{
+    -fx-spacing: 4;
+}
+
+.prog-title{
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
+
+.prog-range{
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255,255,255,0.72);
+}
+
+/* petit “hint” à droite */
+.prog-hint{
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: rgba(229,231,235,0.55);
 }

@@ -6,9 +6,11 @@
 <?import javafx.scene.layout.*?>
 
 <StackPane prefHeight="650.0" prefWidth="900.0"
-           xmlns="http://javafx.com/javafx/17.0.12"
+           xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controllers.AjouterEvenementController">
+           fx:controller="controllers.AjouterEvenementController"
+           stylesheets="@css/style.css"
+           styleClass="app-root">
 
     <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
     <Pane styleClass="bg-overlay" />
@@ -21,7 +23,7 @@
         <top>
             <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
                 <ImageView fx:id="imgLogo" fitHeight="58" fitWidth="58" preserveRatio="true" />
-                <Label styleClass="title" text="Ajouter un Evenement" />
+                <Label styleClass="title" text="Ajouter un Événement" />
                 <Pane HBox.hgrow="ALWAYS"/>
             </HBox>
         </top>
@@ -39,7 +41,8 @@
                                    fitWidth="360" fitHeight="180"
                                    preserveRatio="true"
                                    smooth="true"
-                                   pickOnBounds="true" />
+                                   pickOnBounds="true"
+                                   styleClass="detail-event-image" />
 
                         <HBox spacing="12" alignment="CENTER_LEFT">
                             <Label text="Titre :" styleClass="chip"/>
@@ -75,7 +78,6 @@
                             <TextField fx:id="txtLieu" promptText="Lieu" prefWidth="520"/>
                         </HBox>
 
-                        <!-- ✅ NEW : Spotify Playlist URL -->
                         <HBox spacing="12" alignment="CENTER_LEFT">
                             <Label text="Playlist Spotify :" styleClass="chip"/>
                             <TextField fx:id="txtSpotifyUrl"

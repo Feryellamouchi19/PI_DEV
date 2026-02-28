@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane prefHeight="650.0" prefWidth="900.0" styleClass="root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.DetailsEvenementController">
+<StackPane prefHeight="650.0" prefWidth="900.0" styleClass="app-root" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.DetailsEvenementController">
 
     <!-- background -->
     <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
@@ -52,14 +52,18 @@
                             <Insets bottom="10" left="0" right="0" top="10" />
                         </padding>
 
-                        <!-- ===== Bloc Détails + QR ===== -->
+                        <!-- ===== Bloc Détails + QR + Localisation ===== -->
                         <HBox alignment="TOP_LEFT" spacing="18" styleClass="panel">
                             <padding>
                                 <Insets bottom="18" left="18" right="18" top="18" />
                             </padding>
 
-                            <!-- Image -->
-                            <ImageView fx:id="imgEvent" fitHeight="220" fitWidth="240" preserveRatio="true" styleClass="detail-event-image" />
+                            <!-- Image + Génération IA -->
+                            <VBox alignment="TOP_CENTER" spacing="8">
+                                <ImageView fx:id="imgEvent" fitHeight="220" fitWidth="240" preserveRatio="true" styleClass="detail-event-image" />
+                                <Button fx:id="btnGenererImageIa" onAction="#onGenererImageIa" styleClass="btn-secondary" text="🖼 Générer image IA" />
+                                <Label fx:id="lblImageIaMsg" styleClass="subtitle" text="" />
+                            </VBox>
 
                             <!-- Infos -->
                             <VBox spacing="10" HBox.hgrow="ALWAYS">
@@ -104,32 +108,32 @@
                                 <Label styleClass="detail-section-title" text="QR Code" />
                                 <ImageView fx:id="imgQr" fitHeight="220" fitWidth="220" preserveRatio="true" styleClass="qr-image" />
 
-                                <!-- Admin only (caché via controller) -->
                                 <Button fx:id="btnRegenQr" onAction="#onGenererQr" styleClass="btn-secondary" text="Regénérer QR" />
-
                                 <Label fx:id="lblQrInfo" styleClass="subtitle" text="" />
                             </VBox>
+
+                            <!-- Localisation -->
+                            <VBox prefWidth="260" spacing="10" styleClass="panel">
+                                <padding>
+                                    <Insets bottom="12" left="14" right="14" top="12" />
+                                </padding>
+
+                                <Label styleClass="card-title" text="Localisation" />
+
+                                <HBox spacing="10">
+                                    <Label styleClass="chip" text="Latitude:" />
+                                    <Label fx:id="lblLatitude" />
+                                </HBox>
+
+                                <HBox spacing="10">
+                                    <Label styleClass="chip" text="Longitude:" />
+                                    <Label fx:id="lblLongitude" />
+                                </HBox>
+
+                                <Button fx:id="btnOpenMap" onAction="#onOpenMap" styleClass="btn-primary" text="📍 Ouvrir dans Google Maps" />
+                            </VBox>
+
                         </HBox>
-                        <VBox spacing="6" styleClass="panel">
-                            <padding>
-                                <Insets top="12" right="14" bottom="12" left="14"/>
-                            </padding>
-
-                            <Label text="Localisation" styleClass="card-title"/>
-
-                            <HBox spacing="15">
-                                <Label text="Latitude:" styleClass="chip"/>
-                                <Label fx:id="lblLatitude"/>
-
-                                <Label text="Longitude:" styleClass="chip"/>
-                                <Label fx:id="lblLongitude"/>
-                            </HBox>
-
-                            <Button fx:id="btnOpenMap"
-                                    text="📍 Ouvrir dans Google Maps"
-                                    onAction="#onOpenMap"
-                                    styleClass="btn-primary"/>
-                        </VBox>
 
                         <!-- ===== Programmes ===== -->
                         <Label styleClass="card-title" text="Programmes" />
@@ -156,6 +160,8 @@
                                 <Label fx:id="lblMeteo" styleClass="subtitle" text="" />
                             </HBox>
                         </VBox>
+
+                        <!-- ===== CITATION ===== -->
                         <VBox spacing="6" styleClass="panel">
                             <padding>
                                 <Insets bottom="12" left="14" right="14" top="12" />
@@ -166,7 +172,7 @@
                             <Label fx:id="lblQuoteAuthor" styleClass="subtitle" text="" />
                         </VBox>
 
-                        <!-- ===== SPOTIFY (uniquement SOIREE) ===== -->
+                        <!-- ===== SPOTIFY ===== -->
                         <VBox fx:id="spotifyBox" managed="false" spacing="10" styleClass="panel" visible="false">
                             <padding>
                                 <Insets bottom="12" left="14" right="14" top="12" />
@@ -204,10 +210,8 @@
 
                 <!-- USER -->
                 <HBox fx:id="userButtons" alignment="CENTER_LEFT" spacing="12">
-                    <Button fx:id="btnAddToGoogleCalendar" onAction="#onAddToGoogleCalendar" styleClass="btn-primary" text="📅 Google Calendar" />
-
-                    <Button fx:id="btnToggleNotif" onAction="#onToggleNotification" styleClass="btn-secondary" text="🔔 Notification" />
-
+                    <Button fx:id="btnAddToGoogleCalendar" onAction="#onAddToGoogleCalendar" prefHeight="38.0" prefWidth="69.0" styleClass="btn-primary" text="📅" />
+                    <Button fx:id="btnToggleNotif" onAction="#onToggleNotification" styleClass="btn-secondary" text="🔔 " />
                     <Button onAction="#onRetour" styleClass="btn-secondary" text="↩ Retour" />
                 </HBox>
 
@@ -215,11 +219,8 @@
 
                 <!-- ADMIN -->
                 <HBox fx:id="adminButtons" alignment="CENTER_RIGHT" spacing="12">
-                    <Button onAction="#onAjouterProgramme" prefHeight="26.0" prefWidth="78.0" styleClass="btn-primary" text="Ajouter Programme" />
-
+                    <Button onAction="#onAjouterProgramme" styleClass="btn-primary" text="Ajouter Programme" />
                     <Button onAction="#onModifierEvenement" styleClass="btn-secondary" text="Modifier" />
-
-                    <Button onAction="#onSupprimerProgramme" prefHeight="26.0" prefWidth="80.0" styleClass="btn-danger" text="Supprimer Programme" />
                 </HBox>
 
             </HBox>

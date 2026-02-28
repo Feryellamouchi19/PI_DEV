@@ -14,16 +14,17 @@
            styleClass="event-card">
 
     <children>
-        <VBox spacing="8" styleClass="event-card-inner">
+        <VBox spacing="10" styleClass="event-card-inner">
             <padding>
                 <Insets top="12" right="12" bottom="12" left="12"/>
             </padding>
 
             <ImageView fx:id="imgEvent"
-                       fitWidth="200"
+                       fitWidth="216"
                        fitHeight="120"
-                       preserveRatio="true"
-                       smooth="true"/>
+                       preserveRatio="false"
+                       smooth="true"
+                       styleClass="event-cover"/>
 
             <Label fx:id="lblTitre" text="Titre" styleClass="event-title"/>
             <Label fx:id="lblType" text="TYPE" styleClass="event-type"/>

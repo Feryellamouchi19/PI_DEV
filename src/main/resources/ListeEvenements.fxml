@@ -8,7 +8,9 @@
 <StackPane prefHeight="650.0" prefWidth="900.0"
            xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controllers.ListeEvenementsController">
+           fx:controller="controllers.ListeEvenementsController"
+           stylesheets="@css/style.css"
+           styleClass="app-root">
 
     <ImageView fx:id="bgImage"
                fitHeight="650.0"
@@ -104,7 +106,7 @@
                                       prefWrapLength="820"/>
 
                             <!-- ✅ RECO (cachable) -->
-                            <VBox fx:id="boxReco" spacing="10">
+                            <VBox fx:id="boxReco" spacing="10" visible="false" managed="false">
                                 <Label fx:id="lblReco"
                                        text="⭐ Recommandés pour vous"
                                        styleClass="subtitle"/>

@@ -14,6 +14,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import services.EvenementService;
+import services.EventImageApi;
+import services.ImageAiService;
 import services.ProgrammeService;
 import services.SpotifyOEmbedService;
 import utils.Session;
@@ -61,6 +63,8 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private ImageView bgImage;
     @FXML private ImageView imgLogo;
     @FXML private ImageView imgEvent;
+    @FXML private Button btnGenererImageIa;
+    @FXML private Label lblImageIaMsg;
 
     @FXML private VBox progContainer;
 
@@ -111,6 +115,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private Evenement event;
 
     private final SpotifyOEmbedService spotifyService = new SpotifyOEmbedService();
+    private final EventImageApi imageApi = new EventImageApi();
 
     @FXML
     public void initialize() {
@@ -121,6 +126,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblMsg != null) lblMsg.setText("");
         if (lblQrInfo != null) lblQrInfo.setText("");
         if (lblMeteo != null) lblMeteo.setText("");
+        if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
         hideSpotifyBox();
         updateNotifButtonText();
@@ -160,6 +166,11 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             btnRegenQr.setManaged(admin);
         }
 
+        if (btnGenererImageIa != null) {
+            btnGenererImageIa.setVisible(admin);
+            btnGenererImageIa.setManaged(admin);
+        }
+
         System.out.println("DetailsEvenement ROLE = " + Session.getRole());
     }
 
@@ -180,6 +191,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblDescription != null) lblDescription.setText(safe(event.getDescription()));
 
         loadEventImage(event.getImage());
+        if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
         onGenererQr();
         loadMeteoAsync();
@@ -270,6 +282,66 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         } catch (Exception ignored) {}
     }
 
+    // ===================== ✅ GÉNÉRATION IMAGE IA =====================
+    @FXML
+    private void onGenererImageIa() {
+        if (event == null) {
+            showError("Aucun événement chargé.");
+            return;
+        }
+
+        String titre = safe(event.getTitre());
+        String desc = safe(event.getDescription());
+        String type = safe(event.getType());
+        String lieu = safe(event.getLieu());
+
+        if (titre.isBlank()) {
+            if (lblImageIaMsg != null) lblImageIaMsg.setText("❌ Titre requis");
+            return;
+        }
+
+        if (btnGenererImageIa != null) btnGenererImageIa.setDisable(true);
+        if (lblImageIaMsg != null) lblImageIaMsg.setText("⏳ Génération en cours...");
+
+        Task<ImageAiService.GeneratedImage> task = new Task<>() {
+            @Override
+            protected ImageAiService.GeneratedImage call() throws Exception {
+                return imageApi.generateForEvent(titre, desc, type, lieu);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (btnGenererImageIa != null) btnGenererImageIa.setDisable(false);
+            ImageAiService.GeneratedImage gen = task.getValue();
+            if (gen == null) {
+                if (lblImageIaMsg != null) lblImageIaMsg.setText("❌ Échec génération");
+                return;
+            }
+
+            event.setImage(gen.fileName);
+            evenementService.update(event);
+
+            loadEventImage(gen.fileName);
+            if (imgEvent != null && gen.bytes != null) {
+                imgEvent.setImage(new Image(new ByteArrayInputStream(gen.bytes)));
+            }
+
+            if (lblImageIaMsg != null) lblImageIaMsg.setText("✅ Image générée");
+        });
+
+        task.setOnFailed(e -> {
+            if (btnGenererImageIa != null) btnGenererImageIa.setDisable(false);
+            Throwable ex = task.getException();
+            String msg = (ex == null) ? "Erreur inconnue" : ex.getMessage();
+            if (lblImageIaMsg != null) lblImageIaMsg.setText("❌ " + msg);
+            if (ex != null) ex.printStackTrace();
+        });
+
+        Thread th = new Thread(task, "ai-image-details");
+        th.setDaemon(true);
+        th.start();
+    }
+
     private void clearDetails() {
         if (lblTitre != null) lblTitre.setText("—");
         if (lblType != null) lblType.setText("—");
@@ -286,6 +358,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (imgEvent != null) imgEvent.setImage(null);
         if (imgQr != null) imgQr.setImage(null);
         if (lblQrInfo != null) lblQrInfo.setText("");
+        if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
         if (progContainer != null) progContainer.getChildren().clear();
 
@@ -337,7 +410,6 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
         VBox timeBox = new VBox(lblTime);
         timeBox.setAlignment(Pos.TOP_CENTER);
-        timeBox.setPrefWidth(90);
         timeBox.getStyleClass().add("prog-time-box");
 
         Label title = new Label(safe(p.getTitre()));
@@ -353,25 +425,34 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         Label timeRange = new Label(range);
         timeRange.getStyleClass().add("prog-range");
 
-        VBox details = new VBox(4, title, timeRange);
+        // Hint (admin)
+        Label hint = new Label(Session.isAdmin() ? "Double-clic pour supprimer" : "");
+        hint.getStyleClass().add("prog-hint");
+        hint.setVisible(Session.isAdmin());
+        hint.setManaged(Session.isAdmin());
+
+        VBox details = new VBox(4, title, timeRange, hint);
         details.getStyleClass().add("prog-card-content");
+        HBox.setHgrow(details, Priority.ALWAYS);
 
         Region colorBar = new Region();
         colorBar.getStyleClass().add("prog-color-bar");
 
-        HBox card = new HBox(colorBar, details);
+        HBox card = new HBox(12, colorBar, details);
         card.getStyleClass().add("prog-card");
-        HBox.setHgrow(details, Priority.ALWAYS);
+        HBox.setHgrow(card, Priority.ALWAYS);
 
+        // delete on double click (admin only)
         card.setOnMouseClicked(ev -> {
-            if (ev.getClickCount() == 2) {
-                if (Session.isAdmin()) onDeleteProgramme(p);
+            if (ev.getClickCount() == 2 && Session.isAdmin()) {
+                onDeleteProgramme(p);
             }
         });
 
         HBox row = new HBox(12, timeBox, card);
         row.setAlignment(Pos.TOP_LEFT);
         row.getStyleClass().add("prog-row");
+        HBox.setHgrow(card, Priority.ALWAYS);
 
         return row;
     }
