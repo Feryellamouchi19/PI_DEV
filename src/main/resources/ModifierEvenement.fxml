@@ -56,15 +56,15 @@
                             <Label text="Début:" styleClass="chip" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                             <HBox spacing="10" GridPane.rowIndex="3" GridPane.columnIndex="1">
                                 <DatePicker fx:id="dpDebut" HBox.hgrow="ALWAYS"/>
-                                <Spinner fx:id="spDebutH" prefWidth="90"/>
-                                <Spinner fx:id="spDebutM" prefWidth="90"/>
+                                <Label fx:id="lblHeureDebut" styleClass="chip"/>
+                                <Button text="🕐" onAction="#onChoisirHeureDebut" styleClass="btn-secondary"/>
                             </HBox>
 
-                            <Label text="Fin:" styleClass="chip" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                            <HBox spacing="10" GridPane.rowIndex="4" GridPane.columnIndex="1">
+                            <Label fx:id="lblDateFin" text="Fin:" styleClass="chip" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                            <HBox fx:id="boxDateFin" spacing="10" GridPane.rowIndex="4" GridPane.columnIndex="1">
                                 <DatePicker fx:id="dpFin" HBox.hgrow="ALWAYS"/>
-                                <Spinner fx:id="spFinH" prefWidth="90"/>
-                                <Spinner fx:id="spFinM" prefWidth="90"/>
+                                <Label fx:id="lblHeureFin" styleClass="chip"/>
+                                <Button text="🕐" onAction="#onChoisirHeureFin" styleClass="btn-secondary"/>
                             </HBox>
 
                             <Label text="Description:" styleClass="chip" GridPane.rowIndex="5" GridPane.columnIndex="0"/>

@@ -1,97 +1,231 @@
 package services;
 
-/**
- * API pour générer une image d'événement avec l'IA.
- * Utilisable depuis l'ajout ou la modification d'un événement.
- */
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.time.Duration;
+import java.util.Locale;
+
 public class EventImageApi {
 
-    private final ImageAiService aiService = new ImageAiService();
+    private final UnsplashImageService unsplash = new UnsplashImageService();
 
-    /**
-     * Génère et enregistre une image à partir des infos de l'événement.
-     * Retourne le nom du fichier à stocker en base.
-     */
-    public ImageAiService.GeneratedImage generateForEvent(String titre, String description, String type, String lieu) throws Exception {
-        String prompt = buildPrompt(titre, description, type, lieu);
-        String baseName = (titre == null || titre.isBlank()) ? "event" : titre.trim().replaceAll("[^a-zA-Z0-9-_]", "_");
-        return aiService.generateSaveAndGet(prompt, baseName, titre, description, type, lieu);
+    private final HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .build();
+
+    private static final Path UPLOAD_DIR =
+            Paths.get(System.getProperty("user.dir"), "uploads", "images");
+
+    public ImageAiService.GeneratedImage generateForEvent(
+            String titre,
+            String description,
+            String type,
+            String lieu
+    ) throws Exception {
+
+        Files.createDirectories(UPLOAD_DIR);
+
+        // ✅ Prompt court (évite URL trop longue)
+        String prompt = buildShortPrompt(titre, description, type, lieu);
+
+        // 1) ✅ IA (Pollinations)
+        try {
+            byte[] bytes = generateWithPollinations(prompt);
+
+            String baseName = safeFileBase(titre);
+            String fileName = baseName + "_" + System.currentTimeMillis() + ".png";
+            Path target = UPLOAD_DIR.resolve(fileName);
+            Files.write(target, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            String sourceUrl = buildPollinationsUrl(prompt);
+            return new ImageAiService.GeneratedImage(fileName, target, sourceUrl, bytes);
+
+        } catch (Exception e1) {
+            // 2) ✅ Retry Pollinations avec prompt ultra simple
+            try {
+                String simplePrompt = buildUltraSimplePrompt(titre, type);
+                byte[] bytes = generateWithPollinations(simplePrompt);
+
+                String baseName = safeFileBase(titre);
+                String fileName = baseName + "_" + System.currentTimeMillis() + ".png";
+                Path target = UPLOAD_DIR.resolve(fileName);
+                Files.write(target, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                String sourceUrl = buildPollinationsUrl(simplePrompt);
+                return new ImageAiService.GeneratedImage(fileName, target, sourceUrl, bytes);
+
+            } catch (Exception e2) {
+                // 3) ✅ Unsplash fallback (ne doit jamais crasher)
+                return fallbackUnsplashOrDefault(titre, description, type, lieu);
+            }
+        }
     }
 
-    /**
-     * Construit un prompt optimisé pour une vraie affiche d'événement :
-     * style professionnel, scène visuelle riche, pas de texte dans l'image.
-     */
-    public static String buildPrompt(String titre, String desc, String type, String lieu) {
+    // ============================================================
+    // ✅ Pollinations
+    // ============================================================
+
+    private byte[] generateWithPollinations(String prompt) throws Exception {
+        String url = buildPollinationsUrl(prompt);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(120))
+                .header("User-Agent", "JavaFX")
+                .header("Accept", "image/*")
+                .GET()
+                .build();
+
+        HttpResponse<InputStream> resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+
+        if (resp.statusCode() != 200) {
+            throw new RuntimeException("Pollinations HTTP " + resp.statusCode());
+        }
+
+        byte[] bytes = readAll(resp.body());
+        if (bytes == null || bytes.length < 5000) {
+            throw new RuntimeException("Pollinations returned too small image/empty.");
+        }
+
+        return bytes;
+    }
+
+    private String buildPollinationsUrl(String prompt) {
+        String encoded = URLEncoder.encode(prompt, StandardCharsets.UTF_8);
+
+        // ✅ garde taille raisonnable
+        return "https://image.pollinations.ai/prompt/" + encoded
+                + "?width=1024&height=768&nologo=true&seed=" + System.currentTimeMillis();
+    }
+
+    private static byte[] readAll(InputStream in) throws Exception {
+        try (in) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int r;
+            while ((r = in.read(buf)) != -1) out.write(buf, 0, r);
+            return out.toByteArray();
+        }
+    }
+
+    // ============================================================
+    // ✅ Prompt (court)
+    // ============================================================
+
+    private static String buildShortPrompt(String titre, String desc, String type, String lieu) {
+        String t = safe(type).toUpperCase(Locale.ROOT);
+
+        // ✅ important: court, mais basé sur titre + description
+        String scene = extractScene(desc);
+
         StringBuilder sb = new StringBuilder();
-
-        // Style affiche réelle en premier (guide le modèle)
-        sb.append("Professional event poster, high quality, photorealistic or detailed illustration. ");
-        sb.append("Like a real concert poster or festival flyer. ");
-
-        // 1) Sujet principal
-        String mainSubject = nullSafe(titre);
-        if (!mainSubject.isBlank()) {
-            sb.append("Main subject: ").append(mainSubject).append(". ");
-        }
-
-        // 2) Scène visuelle issue de la description
-        String sceneDesc = extractSceneFromDescription(desc);
-        if (!sceneDesc.isBlank()) {
-            sb.append("Scene: ").append(sceneDesc).append(". ");
-        }
-
-        // 3) Éléments visuels selon le type
-        String typeVisuals = getTypeVisualKeywords(type);
-        if (!typeVisuals.isBlank()) {
-            sb.append("Visual elements: ").append(typeVisuals).append(". ");
-        }
-
-        // 4) Lieu / décor
-        if (lieu != null && !lieu.isBlank()) {
-            sb.append("Setting: ").append(lieu.trim()).append(". ");
-        }
-
-        // 5) Contraintes
-        sb.append("Vibrant colors, dynamic composition, artistic. ");
-        sb.append("No text, no words, no letters in the image. ");
-        sb.append("Safe for work.");
+        sb.append("High quality event poster illustration, cinematic, detailed. ");
+        sb.append("Theme: ").append(typeTheme(t)).append(". ");
+        if (!safe(titre).isBlank()) sb.append("Subject: ").append(safe(titre)).append(". ");
+        if (!scene.isBlank()) sb.append("Scene: ").append(scene).append(". ");
+        if (!safe(lieu).isBlank()) sb.append("Location: ").append(safe(lieu)).append(". ");
+        sb.append("No text, no letters, no logos.");
 
         return sb.toString();
     }
 
-    /**
-     * Extrait une description de scène exploitable (limite 180 caractères, première phrase prioritaire).
-     */
-    private static String extractSceneFromDescription(String desc) {
-        if (desc == null || desc.isBlank()) return "";
-        String s = desc.trim()
-                .replaceAll("\\s+", " ")
-                .replace("\r", " ")
-                .replace("\n", " ");
-        if (s.length() <= 180) return s;
-        // Prendre la première phrase ou les 180 premiers caractères
-        int cut = s.indexOf('.');
-        if (cut > 0 && cut <= 200) return s.substring(0, cut).trim();
-        return s.substring(0, 177).trim() + "...";
+    private static String buildUltraSimplePrompt(String titre, String type) {
+        String t = safe(type).toUpperCase(Locale.ROOT);
+        String main = safe(titre);
+        if (main.isBlank()) main = "event";
+        return "Beautiful poster illustration, " + typeTheme(t) + ", subject " + main + ", no text.";
     }
 
-    /**
-     * Retourne des mots-clés visuels selon le type d'événement pour guider l'IA.
-     */
-    private static String getTypeVisualKeywords(String type) {
-        if (type == null || type.isBlank()) return "";
-        String t = type.trim().toUpperCase();
-        return switch (t) {
-            case "SOIREE" -> "nightlife, party, disco lights, dance floor, neon lights, crowd, music, celebration";
-            case "RANDONNEE" -> "hiking trail, mountains, nature walk, forest path, outdoor adventure, landscape";
-            case "CAMPING" -> "camping tent, campfire, forest, nature, outdoor, stars, wilderness";
-            case "SEJOUR" -> "travel, vacation, scenic view, relaxation, destination, journey";
-            default -> type.toLowerCase() + " event, gathering, people";
+    private static String typeTheme(String typeUpper) {
+        return switch (typeUpper) {
+            case "SOIREE" -> "night party, neon lights, music";
+            case "RANDONNEE" -> "mountains hiking, nature adventure";
+            case "CAMPING" -> "campfire, tent, forest, stars";
+            case "SEJOUR" -> "travel, vacation, scenic destination";
+            default -> "celebration, gathering";
         };
     }
 
-    private static String nullSafe(String s) {
+    private static String extractScene(String desc) {
+        String s = safe(desc).replaceAll("\\s+", " ");
+        if (s.length() <= 120) return s;
+        int cut = s.indexOf('.');
+        if (cut > 0 && cut < 140) return s.substring(0, cut).trim();
+        return s.substring(0, 120).trim();
+    }
+
+    // ============================================================
+    // ✅ Unsplash fallback sans crash
+    // ============================================================
+
+    private ImageAiService.GeneratedImage fallbackUnsplashOrDefault(
+            String titre, String desc, String type, String lieu
+    ) throws Exception {
+
+        String baseName = safeFileBase(titre);
+
+        // ✅ queries de secours (du plus riche au plus simple)
+        String[] queries = new String[] {
+                buildUnsplashQuery(titre, desc, type, lieu),
+                safe(titre),
+                safe(type),
+                "event",
+                "party",
+                "nature"
+        };
+
+        for (String q : queries) {
+            if (q == null || q.isBlank()) continue;
+
+            try {
+                String imageUrl = unsplash.getRandomImageUrl(q);
+                byte[] bytes = unsplash.downloadImageBytes(imageUrl);
+
+                String fileName = baseName + "_" + System.currentTimeMillis() + ".jpg";
+                Path target = UPLOAD_DIR.resolve(fileName);
+                Files.write(target, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                return new ImageAiService.GeneratedImage(fileName, target, imageUrl, bytes);
+
+            } catch (Exception ignore) {
+                // continue
+            }
+        }
+
+        // ✅ dernier fallback: image locale par défaut
+        // (assure-toi que logo.png existe dans uploads/images ou resources)
+        String fallbackName = "logo.png";
+        Path p = UPLOAD_DIR.resolve(fallbackName);
+
+        if (Files.exists(p)) {
+            byte[] bytes = Files.readAllBytes(p);
+            return new ImageAiService.GeneratedImage(fallbackName, p, "local-default", bytes);
+        }
+
+        // Si pas de logo non plus, on ne crash pas, mais on explique.
+        throw new RuntimeException("Aucune image disponible (Pollinations+Unsplash+logo.png).");
+    }
+
+    private static String buildUnsplashQuery(String titre, String desc, String type, String lieu) {
+        String q = (safe(titre) + " " + extractScene(desc) + " " + safe(type) + " " + safe(lieu)).trim();
+        return q.isBlank() ? "event" : q;
+    }
+
+    private static String safeFileBase(String titre) {
+        String base = safe(titre);
+        if (base.isBlank()) base = "event";
+        base = base.replaceAll("[^a-zA-Z0-9-_]", "_");
+        if (base.length() > 30) base = base.substring(0, 30);
+        return base;
+    }
+
+    private static String safe(String s) {
         return s == null ? "" : s.trim();
     }
 }

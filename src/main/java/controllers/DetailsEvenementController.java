@@ -10,6 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -74,6 +75,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     @FXML private Label lblEquipmentTitle;
     @FXML private FlowPane flowEquipment;
 
+    @FXML private VBox boxReservationMaquillage;
+    @FXML private Label lblReservationMaquillage;
+    @FXML private Button btnReserverMaquillage;
+
     // ✅ QR
     @FXML private ImageView imgQr;
     @FXML private Label lblQrInfo;
@@ -116,6 +121,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
     private final EvenementService evenementService = new EvenementService();
     private final EquipmentService equipmentService = new EquipmentService();
+    private final services.ReservationMaquillageService reservationMaquillageService = new services.ReservationMaquillageService();
     private ProgrammeService programmeService;
 
     private int eventId = 0;
@@ -201,6 +207,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         if (lblImageIaMsg != null) lblImageIaMsg.setText("");
 
         loadEquipmentBanner();
+        loadReservationMaquillageSection();
 
         onGenererQr();
         loadMeteoAsync();
@@ -271,35 +278,79 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
         List<entities.Equipment> list = equipmentService.getByEventId(eventId);
 
+        // N'afficher que les équipements choisis par l'admin (jamais la liste de suggestions)
         if (list == null || list.isEmpty()) {
-            // Afficher les suggestions par défaut selon le type
-            String type = event != null ? safe(event.getType()).toUpperCase(Locale.ROOT) : "";
-            List<String> suggestions = EquipmentService.getSuggestionsByType(type);
-            if (suggestions.isEmpty()) {
-                boxEquipmentBanner.setVisible(false);
-                boxEquipmentBanner.setManaged(false);
-                return;
-            }
-            if (lblEquipmentTitle != null) lblEquipmentTitle.setText("📋 Suggestions pour ce type d'événement");
-            flowEquipment.getChildren().clear();
-            for (String s : suggestions) {
-                Label chip = new Label("• " + s);
-                chip.getStyleClass().add("chip");
-                chip.setStyle("-fx-text-fill: white; -fx-background-color: rgba(255,255,255,0.2); -fx-padding: 6 12; -fx-background-radius: 4;");
-                flowEquipment.getChildren().add(chip);
-            }
-        } else {
-            if (lblEquipmentTitle != null) lblEquipmentTitle.setText("📋 À prévoir pour cet événement");
-            flowEquipment.getChildren().clear();
-            for (entities.Equipment eq : list) {
-                Label chip = new Label("✓ " + safe(eq.getLibelle()));
-                chip.getStyleClass().add("chip");
-                chip.setStyle("-fx-text-fill: white; -fx-background-color: rgba(255,255,255,0.25); -fx-padding: 6 12; -fx-background-radius: 4;");
-                flowEquipment.getChildren().add(chip);
-            }
+            boxEquipmentBanner.setVisible(false);
+            boxEquipmentBanner.setManaged(false);
+            return;
+        }
+
+        if (lblEquipmentTitle != null) lblEquipmentTitle.setText("📋 À prévoir pour cet événement");
+        flowEquipment.getChildren().clear();
+        for (entities.Equipment eq : list) {
+            Label chip = new Label("✓ " + safe(eq.getLibelle()));
+            chip.getStyleClass().add("chip");
+            chip.setStyle("-fx-text-fill: white; -fx-background-color: rgba(255,255,255,0.25); -fx-padding: 6 12; -fx-background-radius: 4;");
+            flowEquipment.getChildren().add(chip);
         }
         boxEquipmentBanner.setVisible(true);
         boxEquipmentBanner.setManaged(true);
+    }
+
+    private boolean eventHasMaquillageSpecial(List<entities.Equipment> list) {
+        if (list == null) return false;
+        for (entities.Equipment eq : list) {
+            String lib = safe(eq.getLibelle()).toLowerCase(Locale.ROOT).replace("é", "e");
+            if (lib.contains("maquillage") && (lib.contains("special") || lib.contains("spécial"))) return true;
+        }
+        return false;
+    }
+
+    private void loadReservationMaquillageSection() {
+        if (boxReservationMaquillage == null) return;
+        List<entities.Equipment> list = equipmentService.getByEventId(eventId);
+        boolean show = eventHasMaquillageSpecial(list);
+        boxReservationMaquillage.setVisible(show);
+        boxReservationMaquillage.setManaged(show);
+    }
+
+    @FXML
+    private void onReserverMaquillage() {
+        if (event == null || eventId <= 0) return;
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Réservation coin maquillage");
+        dialog.setHeaderText("Réservez votre place au coin maquillage");
+        dialog.setContentText("Votre email (confirmation envoyée à cette adresse) :");
+        dialog.getEditor().setPromptText("exemple@email.com");
+
+        dialog.showAndWait().ifPresent(email -> {
+            String em = email == null ? "" : email.trim();
+            if (em.isBlank()) {
+                if (lblMsg != null) lblMsg.setText("❌ Indiquez votre email.");
+                return;
+            }
+            if (!em.contains("@") || !em.contains(".")) {
+                if (lblMsg != null) lblMsg.setText("❌ Email invalide.");
+                return;
+            }
+            try {
+                if (reservationMaquillageService.exists(eventId, em)) {
+                    if (lblMsg != null) lblMsg.setText("ℹ️ Une réservation existe déjà pour cet email.");
+                    return;
+                }
+                reservationMaquillageService.add(eventId, em);
+                if (lblMsg != null) lblMsg.setText("✅ Réservation enregistrée ! Un email de confirmation vous sera envoyé à " + em);
+
+                if (lblReservationMaquillage != null) {
+                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + ". Un mail de confirmation vous sera envoyé.");
+                }
+                if (btnReserverMaquillage != null) btnReserverMaquillage.setDisable(true);
+            } catch (java.sql.SQLException ex) {
+                if (lblMsg != null) lblMsg.setText("❌ Erreur enregistrement réservation.");
+                ex.printStackTrace();
+            }
+        });
     }
 
     private void loadEventImage(String file) {
@@ -412,6 +463,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             boxEquipmentBanner.setManaged(false);
         }
         if (flowEquipment != null) flowEquipment.getChildren().clear();
+        if (boxReservationMaquillage != null) {
+            boxReservationMaquillage.setVisible(false);
+            boxReservationMaquillage.setManaged(false);
+        }
 
         hideSpotifyBox();
     }

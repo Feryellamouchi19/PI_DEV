@@ -3,7 +3,11 @@ package services;
 import entities.Equipment;
 import utils.MyDataBase;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +17,20 @@ public class EquipmentService {
 
     public EquipmentService() {
         cnx = MyDataBase.getInstance().getCnx();
+        ensureTableExists();
+    }
+
+    private void ensureTableExists() {
+        String sql = "CREATE TABLE IF NOT EXISTS equipment (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "event_id INT NOT NULL, " +
+                "libelle VARCHAR(255) NOT NULL, " +
+                "FOREIGN KEY (event_id) REFERENCES evenement(id_event) ON DELETE CASCADE)";
+        try (Statement st = cnx.createStatement()) {
+            st.executeUpdate(sql);
+        } catch (SQLException ex) {
+            System.err.println("❌ EquipmentService.ensureTableExists: " + ex.getMessage());
+        }
     }
 
     public void add(Equipment e) {

@@ -44,9 +44,32 @@
             </HBox>
         </top>
 
-        <!-- ================= CENTER ================= -->
-        <center>
-            <ScrollPane fitToWidth="true" styleClass="glass-scroll">
+        <!-- ================= BOTTOM ================= -->
+        <bottom>
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel">
+                <padding>
+                    <Insets bottom="12" left="12" right="12" top="12" />
+                </padding>
+
+                <!-- USER -->
+                <HBox fx:id="userButtons" alignment="CENTER_LEFT" spacing="12">
+                    <Button fx:id="btnAddToGoogleCalendar" onAction="#onAddToGoogleCalendar" prefHeight="38.0" prefWidth="69.0" styleClass="btn-primary" text="📅" />
+                    <Button fx:id="btnToggleNotif" onAction="#onToggleNotification" styleClass="btn-secondary" text="🔔 " />
+                    <Button onAction="#onRetour" styleClass="btn-secondary" text="↩ Retour" />
+                </HBox>
+
+                <Pane HBox.hgrow="ALWAYS" />
+
+                <!-- ADMIN -->
+                <HBox fx:id="adminButtons" alignment="CENTER_RIGHT" spacing="12">
+                    <Button onAction="#onAjouterProgramme" styleClass="btn-primary" text="Ajouter Programme" />
+                    <Button onAction="#onModifierEvenement" styleClass="btn-secondary" text="Modifier" />
+                </HBox>
+
+            </HBox>
+        </bottom>
+      <right>
+            <ScrollPane fitToWidth="true" styleClass="glass-scroll" BorderPane.alignment="CENTER">
                 <content>
                     <VBox spacing="18">
                         <padding>
@@ -137,12 +160,22 @@
                         </HBox>
 
                         <!-- ===== Bandeau Équipements / À prévoir ===== -->
-                        <VBox fx:id="boxEquipmentBanner" spacing="8" styleClass="panel" style="-fx-background-color: linear-gradient(to right, #1e3a5f, #2d5a87); -fx-background-radius: 8;">
+                        <VBox fx:id="boxEquipmentBanner" prefHeight="65.0" prefWidth="944.0" spacing="8" style="-fx-background-color: linear-gradient(to right, #1e3a5f, #2d5a87); -fx-background-radius: 8;" styleClass="panel">
                             <padding>
                                 <Insets bottom="14" left="18" right="18" top="14" />
                             </padding>
-                            <Label fx:id="lblEquipmentTitle" styleClass="card-title" text="📋 À prévoir pour cet événement" style="-fx-text-fill: white;" />
-                            <FlowPane fx:id="flowEquipment" hgap="10" vgap="8" prefWrapLength="850" />
+                            <Label fx:id="lblEquipmentTitle" style="-fx-text-fill: white;" styleClass="card-title" text="📋 À prévoir pour cet événement" />
+                            <FlowPane fx:id="flowEquipment" hgap="10" prefWrapLength="850" vgap="8" />
+                        </VBox>
+
+                        <!-- ===== Réservation coin maquillage (si Maquillage spécial) ===== -->
+                        <VBox fx:id="boxReservationMaquillage" managed="false" spacing="10" styleClass="panel" visible="false">
+                            <padding>
+                                <Insets bottom="14" left="18" right="18" top="14" />
+                            </padding>
+                            <Label styleClass="card-title" text="💄 Coin maquillage" />
+                            <Label fx:id="lblReservationMaquillage" styleClass="card-sub" text="Réservez une place au coin maquillage et recevez un email de confirmation." wrapText="true" />
+                            <Button fx:id="btnReserverMaquillage" onAction="#onReserverMaquillage" styleClass="btn-primary" text="Réserver une place (coin maquillage)" />
                         </VBox>
 
                         <!-- ===== Programmes ===== -->
@@ -209,32 +242,7 @@
                     </VBox>
                 </content>
             </ScrollPane>
-        </center>
-
-        <!-- ================= BOTTOM ================= -->
-        <bottom>
-            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel">
-                <padding>
-                    <Insets bottom="12" left="12" right="12" top="12" />
-                </padding>
-
-                <!-- USER -->
-                <HBox fx:id="userButtons" alignment="CENTER_LEFT" spacing="12">
-                    <Button fx:id="btnAddToGoogleCalendar" onAction="#onAddToGoogleCalendar" prefHeight="38.0" prefWidth="69.0" styleClass="btn-primary" text="📅" />
-                    <Button fx:id="btnToggleNotif" onAction="#onToggleNotification" styleClass="btn-secondary" text="🔔 " />
-                    <Button onAction="#onRetour" styleClass="btn-secondary" text="↩ Retour" />
-                </HBox>
-
-                <Pane HBox.hgrow="ALWAYS" />
-
-                <!-- ADMIN -->
-                <HBox fx:id="adminButtons" alignment="CENTER_RIGHT" spacing="12">
-                    <Button onAction="#onAjouterProgramme" styleClass="btn-primary" text="Ajouter Programme" />
-                    <Button onAction="#onModifierEvenement" styleClass="btn-secondary" text="Modifier" />
-                </HBox>
-
-            </HBox>
-        </bottom>
+      </right>
 
     </BorderPane>
 </StackPane>

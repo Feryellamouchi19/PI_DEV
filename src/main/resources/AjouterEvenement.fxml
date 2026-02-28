@@ -62,15 +62,15 @@
                         <HBox spacing="12" alignment="CENTER_LEFT">
                             <Label text="Date Début :" styleClass="chip"/>
                             <DatePicker fx:id="dpDebut" prefWidth="220"/>
-                            <Spinner fx:id="spDebutH" prefWidth="85"/>
-                            <Spinner fx:id="spDebutM" prefWidth="85"/>
+                            <Label fx:id="lblHeureDebut" styleClass="chip" text="09:00"/>
+                            <Button text="🕐" onAction="#onChoisirHeureDebut" styleClass="btn-secondary"/>
                         </HBox>
 
-                        <HBox spacing="12" alignment="CENTER_LEFT">
+                        <HBox fx:id="boxDateFin" spacing="12" alignment="CENTER_LEFT">
                             <Label text="Date Fin :" styleClass="chip"/>
-                            <DatePicker fx:id="dpFin" prefWidth="220"/>
-                            <Spinner fx:id="spFinH" prefWidth="85"/>
-                            <Spinner fx:id="spFinM" prefWidth="85"/>
+                            <DatePicker fx:id="dpFin" prefWidth="220" promptText="Optionnel"/>
+                            <Label fx:id="lblHeureFin" styleClass="chip" text="10:00"/>
+                            <Button text="🕐" onAction="#onChoisirHeureFin" styleClass="btn-secondary"/>
                         </HBox>
 
                         <HBox spacing="12" alignment="CENTER_LEFT">

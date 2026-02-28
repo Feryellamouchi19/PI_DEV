@@ -6,10 +6,12 @@ import interfaces.DataReceiver;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import services.EquipmentService;
 import services.EvenementService;
+import utils.ClockPickerDialog;
 import utils.Session;
 
 import java.util.ArrayList;
@@ -28,14 +30,13 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
     @FXML private TextArea txtDescription;
 
     @FXML private DatePicker dpDebut;
-    @FXML private Spinner<Integer> spDebutH;
-    @FXML private Spinner<Integer> spDebutM;
-
     @FXML private DatePicker dpFin;
-    @FXML private Spinner<Integer> spFinH;
-    @FXML private Spinner<Integer> spFinM;
 
     @FXML private Label lblMsg;
+    @FXML private Label lblHeureDebut;
+    @FXML private Label lblHeureFin;
+    @FXML private Label lblDateFin;
+    @FXML private HBox boxDateFin;
 
     @FXML private VBox boxEquipment;
     @FXML private TextField txtEquipment;
@@ -47,17 +48,15 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
     private int eventId;
     private Evenement event;
     private final List<String> equipmentSelected = new ArrayList<>();
+    private int heureDebutH, heureDebutM, heureFinH, heureFinM;
 
     @FXML
     public void initialize() {
         // ✅ Charge le bg space_bg.png
         SceneUtil.loadBackgroundImage(bgImage);
-
-        spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 0));
-        spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
-        spFinH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 0));
-        spFinM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
-
+        if (txtType != null) {
+            txtType.textProperty().addListener((o, oldV, newV) -> updateDateFinVisibility());
+        }
         lblMsg.setText("");
     }
 
@@ -82,15 +81,22 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
 
         if (event.getDateDebut() != null) {
             dpDebut.setValue(event.getDateDebut().toLocalDate());
-            spDebutH.getValueFactory().setValue(event.getDateDebut().getHour());
-            spDebutM.getValueFactory().setValue(event.getDateDebut().getMinute());
+            heureDebutH = event.getDateDebut().getHour();
+            heureDebutM = event.getDateDebut().getMinute();
+        } else {
+            heureDebutH = 9;
+            heureDebutM = 0;
         }
-
         if (event.getDateFin() != null) {
             dpFin.setValue(event.getDateFin().toLocalDate());
-            spFinH.getValueFactory().setValue(event.getDateFin().getHour());
-            spFinM.getValueFactory().setValue(event.getDateFin().getMinute());
+            heureFinH = event.getDateFin().getHour();
+            heureFinM = event.getDateFin().getMinute();
+        } else {
+            heureFinH = 22;
+            heureFinM = 0;
         }
+        updateHeureLabels();
+        updateDateFinVisibility();
 
         applyEquipmentVisibility();
         loadEquipmentForEdit();
@@ -116,18 +122,29 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
         }
 
         LocalDate d1 = dpDebut.getValue();
-        LocalDate d2 = dpFin.getValue();
-        if (d1 == null || d2 == null) {
-            lblMsg.setText("❌ Dates obligatoires");
+        if (d1 == null) {
+            lblMsg.setText("❌ Date début obligatoire");
             return;
         }
 
-        LocalDateTime debut = LocalDateTime.of(d1, LocalTime.of(spDebutH.getValue(), spDebutM.getValue()));
-        LocalDateTime fin   = LocalDateTime.of(d2, LocalTime.of(spFinH.getValue(), spFinM.getValue()));
+        LocalDateTime debut = LocalDateTime.of(d1, LocalTime.of(heureDebutH, heureDebutM));
+        LocalDateTime fin = null;
+        String typeUpper = type.toUpperCase();
+        boolean hideDateFin = "SOIREE".equals(typeUpper) || "RANDONNEE".equals(typeUpper);
 
-        if (fin.isBefore(debut)) {
-            lblMsg.setText("❌ Fin doit être après début");
-            return;
+        if (!hideDateFin) {
+            LocalDate d2 = dpFin.getValue();
+            if (d2 == null) {
+                lblMsg.setText("❌ Date fin obligatoire");
+                return;
+            }
+            fin = LocalDateTime.of(d2, LocalTime.of(heureFinH, heureFinM));
+            if (!fin.isAfter(debut)) {
+                lblMsg.setText("❌ Fin doit être après début");
+                return;
+            }
+        } else {
+            fin = debut.plusHours(4);
         }
 
         event.setTitre(titre);
@@ -156,6 +173,39 @@ public class ModifierEvenementController implements DataReceiver<Integer> {
     @FXML
     private void onAnnuler() {
         SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", eventId);
+    }
+
+    private void updateDateFinVisibility() {
+        if (boxDateFin == null || lblDateFin == null) return;
+        String type = safe(txtType.getText()).toUpperCase();
+        boolean hide = "SOIREE".equals(type) || "RANDONNEE".equals(type);
+        boxDateFin.setVisible(!hide);
+        boxDateFin.setManaged(!hide);
+        lblDateFin.setVisible(!hide);
+        lblDateFin.setManaged(!hide);
+    }
+
+    private void updateHeureLabels() {
+        if (lblHeureDebut != null) lblHeureDebut.setText(String.format("%02d:%02d", heureDebutH, heureDebutM));
+        if (lblHeureFin != null) lblHeureFin.setText(String.format("%02d:%02d", heureFinH, heureFinM));
+    }
+
+    @FXML
+    private void onChoisirHeureDebut() {
+        new ClockPickerDialog(heureDebutH, heureDebutM).showAndWait().ifPresent(t -> {
+            heureDebutH = t.getHour();
+            heureDebutM = t.getMinute();
+            updateHeureLabels();
+        });
+    }
+
+    @FXML
+    private void onChoisirHeureFin() {
+        new ClockPickerDialog(heureFinH, heureFinM).showAndWait().ifPresent(t -> {
+            heureFinH = t.getHour();
+            heureFinM = t.getMinute();
+            updateHeureLabels();
+        });
     }
 
     private void applyEquipmentVisibility() {

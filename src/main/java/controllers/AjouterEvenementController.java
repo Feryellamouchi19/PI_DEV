@@ -8,12 +8,14 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import services.EquipmentService;
 import services.EvenementService;
 import services.EventImageApi;
 import services.ImageAiService;
+import utils.ClockPickerDialog;
 import utils.Session;
 
 import java.io.ByteArrayInputStream;
@@ -34,12 +36,10 @@ public class AjouterEvenementController {
     @FXML private ComboBox<String> cbType;
 
     @FXML private DatePicker dpDebut;
-    @FXML private Spinner<Integer> spDebutH;
-    @FXML private Spinner<Integer> spDebutM;
-
+    @FXML private Label lblHeureDebut;
     @FXML private DatePicker dpFin;
-    @FXML private Spinner<Integer> spFinH;
-    @FXML private Spinner<Integer> spFinM;
+    @FXML private Label lblHeureFin;
+    @FXML private HBox boxDateFin;
 
     @FXML private TextField txtLieu;
 
@@ -67,6 +67,9 @@ public class AjouterEvenementController {
     private final List<String> equipmentSelected = new ArrayList<>();
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads", "images");
 
+    private int heureDebutH = 9, heureDebutM = 0;
+    private int heureFinH = 22, heureFinM = 0;
+
     @FXML
     public void initialize() {
         SceneUtil.loadBackgroundImage(bgImage);
@@ -74,20 +77,18 @@ public class AjouterEvenementController {
 
         cbType.getItems().setAll("SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
         cbType.setValue("SOIREE");
-        cbType.getSelectionModel().selectedItemProperty().addListener((o, oldV, newV) -> refreshEquipmentSuggestions());
+        cbType.getSelectionModel().selectedItemProperty().addListener((o, oldV, newV) -> {
+            refreshEquipmentSuggestions();
+            updateDateFinVisibility();
+        });
 
         applyEquipmentVisibility();
         refreshEquipmentSuggestions();
 
-        spDebutH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 9));
-        spDebutM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
-        spFinH.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 10));
-        spFinM.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
-
-        spDebutH.setEditable(true);
-        spDebutM.setEditable(true);
-        spFinH.setEditable(true);
-        spFinM.setEditable(true);
+        heureDebutH = 9; heureDebutM = 0;
+        heureFinH = 22; heureFinM = 0;
+        updateHeureLabels();
+        updateDateFinVisibility();
 
         dpDebut.setValue(LocalDate.now());
         dpFin.setValue(LocalDate.now());
@@ -204,21 +205,20 @@ public class AjouterEvenementController {
 
         LocalDateTime dateDebut = LocalDateTime.of(
                 dpDebut.getValue(),
-                LocalTime.of(spDebutH.getValue(), spDebutM.getValue())
+                LocalTime.of(heureDebutH, heureDebutM)
         );
 
         LocalDateTime dateFin = null;
-        if (dpFin.getValue() != null) {
-            dateFin = LocalDateTime.of(
-                    dpFin.getValue(),
-                    LocalTime.of(spFinH.getValue(), spFinM.getValue())
-            );
+        String typeUpper = type == null ? "" : type.toUpperCase();
+        boolean hideDateFin = "SOIREE".equals(typeUpper) || "RANDONNEE".equals(typeUpper);
+
+        if (!hideDateFin && dpFin.getValue() != null) {
+            dateFin = LocalDateTime.of(dpFin.getValue(), LocalTime.of(heureFinH, heureFinM));
             if (!dateFin.isAfter(dateDebut)) {
                 showError("❌ Date fin doit être après date début.");
                 return;
             }
-        } else if ("SOIREE".equalsIgnoreCase(type)) {
-            // Pour une soirée, date fin par défaut : début + 4h
+        } else if ("SOIREE".equals(typeUpper)) {
             dateFin = dateDebut.plusHours(4);
         }
 
@@ -267,6 +267,39 @@ public class AjouterEvenementController {
     @FXML
     private void onRetour(ActionEvent event) {
         SceneUtil.switchTo("/ListeEvenements.fxml", "Liste des Événements");
+    }
+
+    private void updateDateFinVisibility() {
+        if (boxDateFin == null) return;
+        String type = cbType.getValue() == null ? "" : cbType.getValue().toUpperCase();
+        boolean hide = "SOIREE".equals(type) || "RANDONNEE".equals(type);
+        boxDateFin.setVisible(!hide);
+        boxDateFin.setManaged(!hide);
+    }
+
+    private void updateHeureLabels() {
+        if (lblHeureDebut != null) lblHeureDebut.setText(String.format("%02d:%02d", heureDebutH, heureDebutM));
+        if (lblHeureFin != null) lblHeureFin.setText(String.format("%02d:%02d", heureFinH, heureFinM));
+    }
+
+    @FXML
+    private void onChoisirHeureDebut(ActionEvent event) {
+        ClockPickerDialog d = new ClockPickerDialog(heureDebutH, heureDebutM);
+        d.showAndWait().ifPresent(t -> {
+            heureDebutH = t.getHour();
+            heureDebutM = t.getMinute();
+            updateHeureLabels();
+        });
+    }
+
+    @FXML
+    private void onChoisirHeureFin(ActionEvent event) {
+        ClockPickerDialog d = new ClockPickerDialog(heureFinH, heureFinM);
+        d.showAndWait().ifPresent(t -> {
+            heureFinH = t.getHour();
+            heureFinM = t.getMinute();
+            updateHeureLabels();
+        });
     }
 
     @FXML
