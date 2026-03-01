@@ -13,6 +13,17 @@ public class EvenementService {
 
     public EvenementService() {
         cnx = MyDataBase.getInstance().getCnx();
+        ensureNbVuesColumn();
+    }
+
+    private void ensureNbVuesColumn() {
+        try (var st = cnx.createStatement()) {
+            st.executeUpdate("ALTER TABLE evenement ADD COLUMN nb_vues INT DEFAULT 0");
+        } catch (SQLException e) {
+            if (e.getMessage() == null || !e.getMessage().toLowerCase().contains("duplicate column")) {
+                System.err.println("EvenementService.ensureNbVuesColumn: " + e.getMessage());
+            }
+        }
     }
 
     public void add(Evenement e) {
@@ -60,7 +71,7 @@ public class EvenementService {
         List<Evenement> list = new ArrayList<>();
 
         String sql = """
-            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url, COALESCE(nb_vues, 0) AS nb_vues
             FROM evenement
             ORDER BY id_event DESC
         """;
@@ -82,7 +93,7 @@ public class EvenementService {
 
     public Evenement getOneById(int idEvent) {
         String sql = """
-            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url
+            SELECT id_event, titre, description, type, date_debut, date_fin, lieu, image, spotify_url, COALESCE(nb_vues, 0) AS nb_vues
             FROM evenement
             WHERE id_event = ?
         """;
@@ -151,6 +162,17 @@ public class EvenementService {
         }
     }
 
+    /** Incrémente le nombre de vues d'un événement (appelé à chaque affichage des détails). */
+    public void incrementVues(int idEvent) {
+        String sql = "UPDATE evenement SET nb_vues = COALESCE(nb_vues, 0) + 1 WHERE id_event = ?";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, idEvent);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("EvenementService.incrementVues: " + ex.getMessage());
+        }
+    }
+
     private Evenement map(ResultSet rs) throws SQLException {
         Evenement e = new Evenement();
         e.setIdEvent(rs.getInt("id_event"));
@@ -159,9 +181,10 @@ public class EvenementService {
         e.setType(rs.getString("type"));
         e.setLieu(rs.getString("lieu"));
         e.setImage(rs.getString("image"));
-
-        // ✅ spotify_url
         e.setSpotifyUrl(rs.getString("spotify_url"));
+        try {
+            e.setNbVues(rs.getInt("nb_vues"));
+        } catch (SQLException ignored) { }
 
         Timestamp d1 = rs.getTimestamp("date_debut");
         Timestamp d2 = rs.getTimestamp("date_fin");

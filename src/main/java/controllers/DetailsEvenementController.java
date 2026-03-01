@@ -122,6 +122,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private final EvenementService evenementService = new EvenementService();
     private final EquipmentService equipmentService = new EquipmentService();
     private final services.ReservationMaquillageService reservationMaquillageService = new services.ReservationMaquillageService();
+    private final services.EmailService emailService = new services.EmailService();
     private ProgrammeService programmeService;
 
     private int eventId = 0;
@@ -208,6 +209,8 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
 
         loadEquipmentBanner();
         loadReservationMaquillageSection();
+
+        evenementService.incrementVues(eventId);
 
         onGenererQr();
         loadMeteoAsync();
@@ -340,10 +343,17 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
                     return;
                 }
                 reservationMaquillageService.add(eventId, em);
-                if (lblMsg != null) lblMsg.setText("✅ Réservation enregistrée ! Un email de confirmation vous sera envoyé à " + em);
-
+                boolean emailSent = emailService.sendReservationMaquillageConfirmation(
+                        em, event.getTitre(), event.getLieu(), event.getDateDebut());
+                if (lblMsg != null) {
+                    if (emailSent) {
+                        lblMsg.setText("✅ Réservation enregistrée ! Un email de confirmation a été envoyé à " + em);
+                    } else {
+                        lblMsg.setText("✅ Réservation enregistrée. (Email non envoyé : config SMTP manquante ou erreur.)");
+                    }
+                }
                 if (lblReservationMaquillage != null) {
-                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + ". Un mail de confirmation vous sera envoyé.");
+                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + (emailSent ? ". Un mail de confirmation vous a été envoyé." : "."));
                 }
                 if (btnReserverMaquillage != null) btnReserverMaquillage.setDisable(true);
             } catch (java.sql.SQLException ex) {

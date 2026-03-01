@@ -18,6 +18,7 @@ public class EventCardController {
     @FXML private ImageView imgEvent;
     @FXML private Label lblTitre;
     @FXML private Label lblType;
+    @FXML private Label lblVues;
 
     private Evenement current;
     private Consumer<Evenement> onSelect;
@@ -38,6 +39,7 @@ public class EventCardController {
 
         lblTitre.setText(e.getTitre() == null ? "" : e.getTitre());
         lblType.setText(e.getType() == null ? "" : e.getType());
+        if (lblVues != null) lblVues.setText(e.getNbVues() + " vues");
 
         String file = (e.getImage() == null || e.getImage().isBlank()) ? "logo.png" : e.getImage().trim();
 

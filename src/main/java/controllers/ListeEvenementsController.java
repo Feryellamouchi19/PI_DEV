@@ -49,6 +49,7 @@ public class ListeEvenementsController {
     private final RecommendationService recoService = new RecommendationService();
 
     private List<Evenement> all = new ArrayList<>();
+    private List<Evenement> lastDisplayedList = new ArrayList<>();
     private Evenement selected;
 
     private EventCardController lastSelectedCard;
@@ -64,8 +65,13 @@ public class ListeEvenementsController {
         }
 
         if (cbSort != null) {
-            cbSort.getItems().setAll("Titre", "Date début", "Type");
+            cbSort.getItems().setAll("Titre", "Date début", "Type", "Le plus vu");
             cbSort.setValue("Titre");
+            cbSort.getSelectionModel().selectedItemProperty().addListener((o, ov, nv) -> {
+                if (lastDisplayedList != null && !lastDisplayedList.isEmpty()) {
+                    refreshCards(applySort(lastDisplayedList));
+                }
+            });
         }
 
         if (dpFrom != null) dpFrom.setValue(null);
@@ -120,7 +126,7 @@ public class ListeEvenementsController {
     private void loadFromDB() {
         try {
             all = service.getAll();
-            refreshCards(all);
+            refreshCards(applySort(all));
             clearSelection();
             updateRecoAfterLoad();
             if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
@@ -135,6 +141,7 @@ public class ListeEvenementsController {
     private void refreshCards(List<Evenement> events) {
         if (flowEvents == null) return;
 
+        lastDisplayedList = events == null ? new ArrayList<>() : new ArrayList<>(events);
         flowEvents.getChildren().clear();
         clearSelection();
 
@@ -298,7 +305,7 @@ public class ListeEvenementsController {
         if (dpFrom != null) dpFrom.setValue(null);
         if (dpTo != null) dpTo.setValue(null);
 
-        refreshCards(all);
+        refreshCards(applySort(all));
         updateRecoAfterLoad();
 
         if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
@@ -309,7 +316,7 @@ public class ListeEvenementsController {
         String q = safe(txtSearch.getText()).toLowerCase(Locale.ROOT);
 
         if (q.isEmpty()) {
-            refreshCards(all);
+            refreshCards(applySort(all));
             updateRecoAfterLoad();
             if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
             return;
@@ -323,7 +330,7 @@ public class ListeEvenementsController {
                 )
                 .collect(Collectors.toList());
 
-        refreshCards(filtered);
+        refreshCards(applySort(filtered));
         if (lblMsg != null) lblMsg.setText("✓ Résultats: " + filtered.size());
 
         FilterCriteria c = new FilterCriteria();
@@ -362,7 +369,7 @@ public class ListeEvenementsController {
                     .collect(Collectors.toList());
         }
 
-        refreshCards(tmp);
+        refreshCards(applySort(tmp));
         if (lblMsg != null) lblMsg.setText("✓ filtré: " + tmp.size());
 
         FilterCriteria c = new FilterCriteria();
@@ -407,6 +414,21 @@ public class ListeEvenementsController {
     }
 
     // ===================== HELPERS =====================
+
+    private List<Evenement> applySort(List<Evenement> list) {
+        if (list == null) return List.of();
+        String sort = cbSort == null ? "Titre" : cbSort.getValue();
+        if (sort == null) sort = "Titre";
+        List<Evenement> sorted = new ArrayList<>(list);
+        switch (sort) {
+            case "Date début" -> sorted.sort(Comparator.comparing(
+                    e -> e.getDateDebut() == null ? java.time.LocalDateTime.MIN : e.getDateDebut()));
+            case "Type" -> sorted.sort(Comparator.comparing(e -> safe(e.getType()).toLowerCase(Locale.ROOT)));
+            case "Le plus vu" -> sorted.sort(Comparator.comparingInt(Evenement::getNbVues).reversed());
+            default -> sorted.sort(Comparator.comparing(e -> safe(e.getTitre()).toLowerCase(Locale.ROOT)));
+        }
+        return sorted;
+    }
 
     private List<Evenement> getCurrentFiltered() {
         String q = safe(txtSearch.getText()).toLowerCase(Locale.ROOT);

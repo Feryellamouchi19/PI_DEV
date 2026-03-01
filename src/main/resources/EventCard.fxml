@@ -28,6 +28,7 @@
 
             <Label fx:id="lblTitre" text="Titre" styleClass="event-title"/>
             <Label fx:id="lblType" text="TYPE" styleClass="event-type"/>
+            <Label fx:id="lblVues" text="0 vues" styleClass="event-vues"/>
         </VBox>
     </children>
 </StackPane>

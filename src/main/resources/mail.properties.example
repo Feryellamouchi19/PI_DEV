@@ -1,0 +1,15 @@
+# Configuration SMTP pour l'envoi des emails (réservation coin maquillage).
+# Copier ce fichier en mail.properties et remplir avec votre serveur SMTP.
+
+# Serveur SMTP (ex: Gmail, Outlook, ou votre hébergeur)
+mail.smtp.host=smtp.gmail.com
+mail.smtp.port=587
+mail.smtp.auth=true
+mail.smtp.starttls.enable=true
+
+# Compte email (expéditeur)
+mail.smtp.user=votre.email@gmail.com
+mail.smtp.password=votre_mot_de_passe_application
+
+# Adresse d'envoi affichée (optionnel, sinon = mail.smtp.user)
+mail.from=votre.email@gmail.com

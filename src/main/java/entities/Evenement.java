@@ -12,7 +12,8 @@ public class Evenement {
     private LocalDateTime dateFin;    // date_fin (nullable)
     private String lieu;
     private String image;
-    private String spotifyUrl;        // ✅ NEW -> spotify_url
+    private String spotifyUrl;        // spotify_url
+    private int nbVues;               // nombre de vues (affichages détails)
 
     public Evenement() {}
 
@@ -112,6 +113,14 @@ public class Evenement {
         this.spotifyUrl = spotifyUrl;
     }
 
+    public int getNbVues() {
+        return nbVues;
+    }
+
+    public void setNbVues(int nbVues) {
+        this.nbVues = nbVues;
+    }
+
     // =========================
     // toString
     // =========================
@@ -127,6 +136,7 @@ public class Evenement {
                 ", lieu='" + lieu + '\'' +
                 ", image='" + image + '\'' +
                 ", spotifyUrl='" + spotifyUrl + '\'' +
+                ", nbVues=" + nbVues +
                 '}';
     }
 }

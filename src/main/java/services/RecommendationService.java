@@ -20,12 +20,23 @@ public class RecommendationService {
                 .map(Evenement::getIdEvent)
                 .collect(Collectors.toSet());
 
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         return allEvents.stream()
                 .filter(e -> e != null)
                 .filter(e -> !filteredIds.contains(e.getIdEvent())) // pas dupliquer
                 .map(e -> new Scored(e, score(e, c)))
                 .filter(s -> s.score > 0)
-                .sorted((a, b) -> Integer.compare(b.score, a.score))
+                .sorted((a, b) -> {
+                    int cmp = Integer.compare(b.score, a.score);
+                    if (cmp != 0) return cmp;
+                    // Même score : tri par proximité à maintenant (plus proche en premier)
+                    if (a.event.getDateDebut() == null && b.event.getDateDebut() == null) return 0;
+                    if (a.event.getDateDebut() == null) return 1;
+                    if (b.event.getDateDebut() == null) return -1;
+                    long aDist = Math.abs(ChronoUnit.MINUTES.between(a.event.getDateDebut(), now));
+                    long bDist = Math.abs(ChronoUnit.MINUTES.between(b.event.getDateDebut(), now));
+                    return Long.compare(aDist, bDist);
+                })
                 .limit(limit)
                 .map(s -> s.event)
                 .toList();
@@ -70,11 +81,11 @@ public class RecommendationService {
                         (c.getKeyword() == null || c.getKeyword().isBlank());
 
         if (noFilter) {
-            // Suggestions : événements à venir (priorité aux plus proches)
-            if (e.getDateDebut() != null && e.getDateDebut().isAfter(java.time.LocalDateTime.now())) {
-                return 10; // score minimal pour apparaître en suggestions
-            }
-            return 0;
+            // Suggestions : événements à venir en priorité (score 10), sinon passés récents (score 5) pour toujours afficher quelque chose
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            if (e.getDateDebut() == null) return 5; // sans date, on affiche quand même
+            if (e.getDateDebut().isAfter(now)) return 10; // à venir
+            return 5; // passé : on affiche aussi en suggestions
         }
 
         return s;
