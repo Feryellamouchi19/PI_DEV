@@ -1,46 +1,58 @@
-/* =========================
-   THEME LIGHT (Tokens)
-   ========================= */
+/* ============================================
+   THEME LIGHT (VIF + PRO) - JavaFX 21
+   Background image stays visible
+   ============================================ */
+
 .root, .app-root{
     -fx-font-family: "Segoe UI","Roboto","Arial",sans-serif;
     -fx-font-size: 13px;
+    -fx-background-color: #F6F8FC;
 
-    /* backgrounds */
-    -app-bg: #F6F8FC;
-    -overlay: rgba(255,255,255,0.55);
+    /* overlay for bg image (light) => visible but not washed */
+    -bg-top: rgba(255,255,255,0.02);
+    -bg-mid: rgba(255,255,255,0.08);
+    -bg-bottom: rgba(255,255,255,0.16);
 
     /* surfaces */
-    -glass: rgba(255,255,255,0.75);
-    -glass-strong: rgba(255,255,255,0.92);
-    -stroke: rgba(15,23,42,0.12);
+    -surface: rgba(255,255,255,0.90);
+    -surface-2: rgba(255,255,255,0.82);
+
+    /* ✅ borders (paint) */
+    -strokeA: rgba(15,23,42,0.12);
+    -strokeB: rgba(15,23,42,0.10);
+    -strokeC: rgba(15,23,42,0.08);
 
     /* text */
-    -text: #0F172A;
-    -muted: rgba(15,23,42,0.60);
+    -text: #0B1220;
+    -muted: rgba(11,18,32,0.62);
 
-    /* accents */
-    -primary: #FFC107;
-    -primary-hover: #FFB300;
-    -primary-pressed: #FFA000;
+    /* controls (bright glass) */
+    -control: rgba(255,255,255,0.86);
+    -control-hover: rgba(255,255,255,0.98);
 
-    -focus: rgba(59,130,246,0.55);
+    /* accents (vivid) */
+    -primary: #FFB000;
+    -primary-hover: #FF9800;
+    -primary-text: #111827;
+
+    -focus: rgba(0,122,255,0.45);
+    -focus-glow: rgba(0,122,255,0.10);
+
+    /* cards */
+    -card: rgba(255,255,255,0.96);
+    -card-hover: rgba(255,255,255,1.0);
 
     /* danger */
     -danger: #EF4444;
     -danger-hover: #DC2626;
 
     /* chip */
-    -chip-bg: rgba(15,23,42,0.06);
-    -chip-text: rgba(15,23,42,0.75);
-
-    /* card */
-    -card-bg: rgba(255,255,255,0.85);
-    -card-hover: rgba(255,255,255,0.95);
+    -chip: rgba(15,23,42,0.06);
 
     /* popup */
     -popup-bg: rgba(255,255,255,0.98);
     -popup-hover: rgba(15,23,42,0.06);
-    -popup-selected-bg: rgba(255,193,7,0.25);
+    -popup-selected-bg: rgba(255,176,0,0.25);
     -popup-selected-text: #111827;
 
     /* scroll */
@@ -49,8 +61,6 @@
     -scroll-thumb-hover: rgba(15,23,42,0.26);
 
     /* shadows */
-    -shadow-soft: rgba(15,23,42,0.10);
-    -shadow-strong: rgba(15,23,42,0.18);
-
-    -fx-background-color: -app-bg;
+    -shadow: rgba(11,18,32,0.18);
+    -shadow-soft: rgba(11,18,32,0.10);
 }

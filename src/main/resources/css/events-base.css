@@ -1,71 +1,178 @@
-/* =========================
-   BASE IMPROVEMENTS
-   ========================= */
+/* ============================================
+   PI_DEV - Events UI (PRO Base)
+   Compatible JavaFX 21
+   IMPORTANT: no custom var directly in -fx-border-color
+   ============================================ */
 
-/* chip theme-friendly */
+/* ---------- Background containers ---------- */
+.border-pane, .anchor-pane, .stack-pane, .vbox, .hbox, .grid-pane {
+    -fx-background-color: transparent;
+}
+
+/* ---------- BG overlay (image visible in both modes) ---------- */
+.bg-overlay{
+    /* vignette + veil */
+    -fx-background-color:
+            radial-gradient(center 50% 40%, radius 85%,
+            rgba(255,255,255,0.00), rgba(0,0,0,0.28)),
+            linear-gradient(to bottom,
+            -bg-top, -bg-mid, -bg-bottom);
+}
+
+/* ---------- Typography ---------- */
+.label{ -fx-text-fill: -text; }
+
+.title{
+    -fx-font-size: 26px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -text;
+}
+.subtitle{
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -muted;
+}
+
+/* chip */
 .chip{
-    -fx-font-size: 13px;
+    -fx-background-color: -chip;
+    -fx-text-fill: -muted;
     -fx-font-weight: 800;
-    -fx-text-fill: -chip-text;
-    -fx-background-color: -chip-bg;
     -fx-background-radius: 999;
     -fx-padding: 6 10;
 }
 
-/* header/panel use stronger glass */
+/* ---------- App shell (main card) ---------- */
+.app-shell{
+    -fx-max-width: 1000;
+    -fx-pref-width: 1000;
+    -fx-padding: 22;
+
+    -fx-background-radius: 26;
+    -fx-border-radius: 26;
+
+    -fx-background-color: -surface;
+
+    /* ✅ JavaFX21 safe: real paint values (theme sets -strokeA as rgba string that JavaFX accepts) */
+    -fx-border-color: -strokeA;
+    -fx-border-width: 1;
+
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.30, 0, 18);
+}
+
+/* ---------- Header / Panels ---------- */
 .header-card{
-    -fx-background-color: -glass-strong;
-    -fx-border-color: -stroke;
-    -fx-effect: dropshadow(gaussian, -shadow-strong, 28, 0.30, 0, 12);
-}
-.panel{
-    -fx-background-color: -glass;
-    -fx-border-color: -stroke;
-    -fx-effect: dropshadow(gaussian, -shadow-strong, 26, 0.30, 0, 10);
-}
-
-/* inputs theme-friendly */
-.text-field, .combo-box, .date-picker, .text-area, .choice-box{
-    -fx-background-color: -glass;
-    -fx-text-fill: -text;
-    -fx-prompt-text-fill: -muted;
-    -fx-border-color: transparent;
-}
-.text-field:focused, .combo-box:focused, .date-picker:focused, .text-area:focused, .choice-box:focused{
-    -fx-border-color: -focus;
-    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.18), 18, 0.30, 0, 8);
-}
-
-/* buttons smoother */
-.btn-secondary{
-    -fx-background-color: -glass;
-    -fx-text-fill: -text;
-    -fx-border-color: -stroke;
-}
-.btn-secondary:hover{
-    -fx-background-color: -glass-strong;
-}
-
-/* event card theme-friendly */
-.event-card{
-    -fx-background-color: -card-bg;
-    -fx-border-color: -stroke;
+    -fx-background-color: -surface-2;
     -fx-background-radius: 18;
     -fx-border-radius: 18;
-    -fx-effect: dropshadow(gaussian, -shadow-strong, 26, 0.33, 0, 12);
-}
-.event-card:hover{
-    -fx-background-color: -card-hover;
-}
-.event-title{ -fx-text-fill: -text; }
-.event-type{ -fx-text-fill: -muted; }
 
-/* popup theme-friendly */
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
+
+    -fx-padding: 14 16;
+    -fx-effect: dropshadow(gaussian, -shadow-soft, 18, 0.28, 0, 8);
+}
+
+.panel{
+    -fx-background-color: -surface-2;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+
+    -fx-border-color: -strokeC;
+    -fx-border-width: 1;
+
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, -shadow-soft, 16, 0.25, 0, 6);
+}
+
+/* ---------- Inputs ---------- */
+.text-field, .combo-box, .date-picker, .choice-box, .text-area{
+    -fx-background-color: -control;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+
+    -fx-padding: 10 12;
+
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: -muted;
+
+    -fx-control-inner-background: -control;
+}
+
+.text-area .content{ -fx-background-color: transparent; }
+
+.text-field:hover, .combo-box:hover, .date-picker:hover, .choice-box:hover, .text-area:hover{
+    -fx-background-color: -control-hover;
+}
+
+.text-field:focused, .combo-box:focused, .date-picker:focused, .choice-box:focused, .text-area:focused{
+    -fx-border-color: -focus;
+    -fx-border-width: 1.2;
+    -fx-effect: dropshadow(gaussian, -focus-glow, 18, 0.30, 0, 8);
+}
+
+/* ChoiceBox arrow (clean) */
+.choice-box .arrow{ -fx-background-color: -muted; }
+
+/* ---------- Buttons ---------- */
+.button{
+    -fx-cursor: hand;
+    -fx-font-weight: 900;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 10 14;
+}
+
+.btn-primary{
+    -fx-background-color: -primary;
+    -fx-text-fill: -primary-text;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 14, 0.25, 0, 6);
+}
+.btn-primary:hover{ -fx-background-color: -primary-hover; }
+.btn-primary:pressed{ -fx-translate-y: 1; }
+
+.btn-secondary{
+    -fx-background-color: -control;
+    -fx-text-fill: -text;
+
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
+}
+.btn-secondary:hover{ -fx-background-color: -control-hover; }
+
+.btn-danger{
+    -fx-background-color: -danger;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 14, 0.25, 0, 6);
+}
+.btn-danger:hover{ -fx-background-color: -danger-hover; }
+
+.button:disabled{ -fx-opacity: 0.55; -fx-cursor: default; }
+
+/* ---------- ScrollPane ---------- */
+.scroll-pane, .glass-scroll{
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+.scroll-pane > .viewport{
+    -fx-background-color: transparent;
+}
+
+/* ---------- Combo popup ---------- */
 .combo-box-popup .list-view{
     -fx-background-color: -popup-bg;
-    -fx-border-color: -stroke;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
 }
 .combo-box-popup .list-cell{
+    -fx-background-color: transparent;
     -fx-text-fill: -text;
 }
 .combo-box-popup .list-cell:hover{
@@ -75,24 +182,99 @@
     -fx-background-color: -popup-selected-bg;
     -fx-text-fill: -popup-selected-text;
 }
+
+/* datepicker popup */
 .date-picker-popup{
     -fx-background-color: -popup-bg;
-    -fx-border-color: -stroke;
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
 }
 
-/* scrollbar theme-friendly */
+/* ---------- Scrollbar ---------- */
 .scroll-bar:vertical .track, .scroll-bar:horizontal .track{
     -fx-background-color: -scroll-track;
+    -fx-background-radius: 999;
 }
 .scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb{
     -fx-background-color: -scroll-thumb;
+    -fx-background-radius: 999;
 }
 .scroll-bar:vertical .thumb:hover, .scroll-bar:horizontal .thumb:hover{
     -fx-background-color: -scroll-thumb-hover;
 }
-
-/* optional: nicer toggle */
-.toggle-button.btn-secondary:selected{
-    -fx-border-color: -primary;
-    -fx-border-width: 1.2;
+.scroll-bar .increment-button, .scroll-bar .decrement-button{
+    -fx-padding: 0;
+    -fx-background-color: transparent;
 }
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow{
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* ---------- Event Card ---------- */
+.event-card{
+    -fx-background-color: -card;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+
+    -fx-border-color: -strokeC;
+    -fx-border-width: 1;
+
+    -fx-padding: 10;
+
+    -fx-effect: dropshadow(gaussian, -shadow-soft, 22, 0.30, 0, 10);
+}
+.event-card:hover{
+    -fx-background-color: -card-hover;
+    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.30, 0, 14);
+}
+.event-card.selected{
+    -fx-border-color: -primary;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(255,176,0,0.20), 18, 0.25, 0, 0);
+}
+
+.event-title{
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -text;
+}
+.event-type{
+    -fx-font-size: 12px;
+    -fx-text-fill: -muted;
+}
+/* ---------- Titles like Details page ---------- */
+.page-title{
+    -fx-font-size: 28px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -text;
+}
+
+.section-title{
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -muted;
+}
+
+/* Bottom bar like Details */
+.dock-bar{
+    -fx-background-color: -surface-2;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
+    -fx-padding: 12 14;
+    -fx-effect: dropshadow(gaussian, -shadow-soft, 18, 0.28, 0, 8);
+}
+
+/* Optional icon toggle (if you use it) */
+.icon-toggle{
+    -fx-background-color: -control;
+    -fx-text-fill: -text;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -strokeB;
+    -fx-border-width: 1;
+    -fx-padding: 8 10;
+}
+.icon-toggle:hover{ -fx-background-color: -control-hover; }
