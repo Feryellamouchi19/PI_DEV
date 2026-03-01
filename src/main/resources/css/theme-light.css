@@ -1,0 +1,56 @@
+/* =========================
+   THEME LIGHT (Tokens)
+   ========================= */
+.root, .app-root{
+    -fx-font-family: "Segoe UI","Roboto","Arial",sans-serif;
+    -fx-font-size: 13px;
+
+    /* backgrounds */
+    -app-bg: #F6F8FC;
+    -overlay: rgba(255,255,255,0.55);
+
+    /* surfaces */
+    -glass: rgba(255,255,255,0.75);
+    -glass-strong: rgba(255,255,255,0.92);
+    -stroke: rgba(15,23,42,0.12);
+
+    /* text */
+    -text: #0F172A;
+    -muted: rgba(15,23,42,0.60);
+
+    /* accents */
+    -primary: #FFC107;
+    -primary-hover: #FFB300;
+    -primary-pressed: #FFA000;
+
+    -focus: rgba(59,130,246,0.55);
+
+    /* danger */
+    -danger: #EF4444;
+    -danger-hover: #DC2626;
+
+    /* chip */
+    -chip-bg: rgba(15,23,42,0.06);
+    -chip-text: rgba(15,23,42,0.75);
+
+    /* card */
+    -card-bg: rgba(255,255,255,0.85);
+    -card-hover: rgba(255,255,255,0.95);
+
+    /* popup */
+    -popup-bg: rgba(255,255,255,0.98);
+    -popup-hover: rgba(15,23,42,0.06);
+    -popup-selected-bg: rgba(255,193,7,0.25);
+    -popup-selected-text: #111827;
+
+    /* scroll */
+    -scroll-track: rgba(15,23,42,0.06);
+    -scroll-thumb: rgba(15,23,42,0.18);
+    -scroll-thumb-hover: rgba(15,23,42,0.26);
+
+    /* shadows */
+    -shadow-soft: rgba(15,23,42,0.10);
+    -shadow-strong: rgba(15,23,42,0.18);
+
+    -fx-background-color: -app-bg;
+}

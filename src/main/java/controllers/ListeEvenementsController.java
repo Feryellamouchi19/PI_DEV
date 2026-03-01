@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import services.EvenementService;
 import services.FilterCriteria;
@@ -27,6 +28,9 @@ public class ListeEvenementsController {
     @FXML private DatePicker dpTo;
     @FXML private FlowPane flowEvents;
     @FXML private Label lblMsg;
+
+    @FXML private StackPane root;          // ✅ correspond au StackPane du FXML
+    @FXML private ToggleButton btnTheme;   // ✅ bouton thème
 
     // ✅ Reco UI
     @FXML private VBox boxReco;
@@ -59,6 +63,11 @@ public class ListeEvenementsController {
         SceneUtil.loadBackgroundImage(bgImage);
         SceneUtil.loadLogoImage(imgLogo);
 
+        // ✅ texte du bouton selon thème global
+        if (btnTheme != null) {
+            btnTheme.setText(SceneUtil.isDarkMode() ? "🌙" : "☀️");
+        }
+
         if (cbType != null) {
             cbType.getItems().setAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
             cbType.setValue("TOUS");
@@ -88,6 +97,13 @@ public class ListeEvenementsController {
         if (btnAjouterBottom != null) btnAjouterBottom.setOnAction(e -> onGoAjouter());
 
         loadFromDB();
+    }
+
+    // ✅ Switch thème global (reste pour toutes les pages)
+    @FXML
+    private void toggleTheme() {
+        SceneUtil.setDarkMode(!SceneUtil.isDarkMode());
+        if (btnTheme != null) btnTheme.setText(SceneUtil.isDarkMode() ? "🌙" : "☀️");
     }
 
     // ===================== ROLE =====================
@@ -238,55 +254,33 @@ public class ListeEvenementsController {
         }
     }
 
-    // ===================== RECO VISIBILITY =====================
-
-    private boolean hasAnyFilterApplied() {
-        boolean hasSearch = txtSearch != null && !safe(txtSearch.getText()).isBlank();
-
-        String type = cbType == null ? "TOUS" : cbType.getValue();
-        boolean hasType = type != null && !"TOUS".equalsIgnoreCase(type);
-
-        boolean hasFrom = dpFrom != null && dpFrom.getValue() != null;
-        boolean hasTo   = dpTo != null && dpTo.getValue() != null;
-
-        return hasSearch || hasType || hasFrom || hasTo;
-    }
-
-    private void setRecoVisible(boolean visible) {
-        if (boxReco == null) return;
-        boxReco.setVisible(visible);
-        boxReco.setManaged(visible);
-    }
+    // ===================== RECO =====================
 
     private void updateRecoVisibilityAndContent(List<Evenement> rec) {
         if (rec == null) rec = Collections.emptyList();
-        setRecoVisible(true); // Toujours afficher la section recommandations
+        if (boxReco != null) {
+            boxReco.setVisible(true);
+            boxReco.setManaged(true);
+        }
 
         if (rec.isEmpty()) {
-            if (lblReco != null) lblReco.setText(hasAnyFilterApplied()
-                    ? "⭐ Recommandés pour vous (aucun)"
-                    : "⭐ Suggestions (événements à venir)");
+            if (lblReco != null) lblReco.setText("⭐ Recommandés pour vous (aucun)");
             if (flowRecommended != null) flowRecommended.getChildren().clear();
         } else {
             refreshRecommended(rec);
         }
     }
 
-    /** Appelé après loadFromDB : affiche les suggestions (événements à venir) */
     private void updateRecoAfterLoad() {
         FilterCriteria c = new FilterCriteria();
         c.setType("TOUS");
-        // filtered=empty pour ne pas exclure : on affiche les suggestions (événements à venir)
         List<Evenement> rec = recoService.recommendFromFilter(c, all, Collections.emptyList(), 6);
         updateRecoVisibilityAndContent(rec);
     }
 
     // ===================== ACTIONS =====================
 
-    @FXML
-    private void onGoAjouter() {
-        SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Événement");
-    }
+    @FXML private void onGoAjouter() { SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Événement"); }
 
     @FXML
     private void onVoirDetails() {
@@ -419,6 +413,7 @@ public class ListeEvenementsController {
         if (list == null) return List.of();
         String sort = cbSort == null ? "Titre" : cbSort.getValue();
         if (sort == null) sort = "Titre";
+
         List<Evenement> sorted = new ArrayList<>(list);
         switch (sort) {
             case "Date début" -> sorted.sort(Comparator.comparing(
@@ -443,7 +438,5 @@ public class ListeEvenementsController {
                 .collect(Collectors.toList());
     }
 
-    private String safe(String s) {
-        return s == null ? "" : s.trim();
-    }
+    private String safe(String s) { return s == null ? "" : s.trim(); }
 }

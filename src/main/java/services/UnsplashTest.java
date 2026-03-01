@@ -11,4 +11,5 @@ public class UnsplashTest {
         Path p = Paths.get(System.getProperty("user.dir"), "uploads", "images", gen.fileName);
         System.out.println("saved=" + p.toAbsolutePath());
     }
+
 }

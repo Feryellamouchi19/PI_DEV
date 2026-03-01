@@ -122,7 +122,10 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
     private final EvenementService evenementService = new EvenementService();
     private final EquipmentService equipmentService = new EquipmentService();
     private final services.ReservationMaquillageService reservationMaquillageService = new services.ReservationMaquillageService();
-    private final services.EmailService emailService = new services.EmailService();
+
+    // ✅ ✅ SendGrid API
+    private final services.SendGridMailService mailService = new services.SendGridMailService();
+
     private ProgrammeService programmeService;
 
     private int eventId = 0;
@@ -317,6 +320,7 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
         boxReservationMaquillage.setManaged(show);
     }
 
+    // ===================== ✅✅ RESERVER MAQUILLAGE (SENDGRID) ✅✅ =====================
     @FXML
     private void onReserverMaquillage() {
         if (event == null || eventId <= 0) return;
@@ -331,34 +335,60 @@ public class DetailsEvenementController implements DataReceiver<Integer> {
             String em = email == null ? "" : email.trim();
             if (em.isBlank()) {
                 if (lblMsg != null) lblMsg.setText("❌ Indiquez votre email.");
+                services.NotificationService.warn("Email", "Indiquez votre email.");
                 return;
             }
             if (!em.contains("@") || !em.contains(".")) {
                 if (lblMsg != null) lblMsg.setText("❌ Email invalide.");
+                services.NotificationService.warn("Email", "Email invalide.");
                 return;
             }
             try {
                 if (reservationMaquillageService.exists(eventId, em)) {
                     if (lblMsg != null) lblMsg.setText("ℹ️ Une réservation existe déjà pour cet email.");
+                    services.NotificationService.info("Réservation", "Une réservation existe déjà pour cet email.");
                     return;
                 }
+
+                // ✅ 1) Enregistrer réservation en DB
                 reservationMaquillageService.add(eventId, em);
-                boolean emailSent = emailService.sendReservationMaquillageConfirmation(
-                        em, event.getTitre(), event.getLieu(), event.getDateDebut());
-                if (lblMsg != null) {
-                    if (emailSent) {
-                        lblMsg.setText("✅ Réservation enregistrée ! Un email de confirmation a été envoyé à " + em);
-                    } else {
-                        lblMsg.setText("✅ Réservation enregistrée. (Email non envoyé : config SMTP manquante ou erreur.)");
-                    }
-                }
-                if (lblReservationMaquillage != null) {
-                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + (emailSent ? ". Un mail de confirmation vous a été envoyé." : "."));
-                }
+
+                // ✅ 2) UI instant
                 if (btnReserverMaquillage != null) btnReserverMaquillage.setDisable(true);
+                if (lblMsg != null) lblMsg.setText("✅ Réservation enregistrée ! Envoi du mail...");
+                if (lblReservationMaquillage != null) {
+                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + ". Envoi du mail...");
+                }
+                services.NotificationService.info("Réservation", "Réservation enregistrée. Envoi du mail...");
+
+                // ✅ 3) Envoi via SendGrid API (async)
+                mailService.sendReservationMaquillageConfirmationAsync(
+                        em,
+                        event.getTitre(),
+                        event.getLieu(),
+                        event.getDateDebut(),
+                        (emailSent) -> {
+                            if (emailSent) {
+                                if (lblMsg != null) lblMsg.setText("✅ Email envoyé à " + em);
+                                if (lblReservationMaquillage != null) {
+                                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + ". Mail envoyé ✅");
+                                }
+                                services.NotificationService.info("Email envoyé", "Confirmation envoyée à " + em);
+                            } else {
+                                if (lblMsg != null) lblMsg.setText("✅ Réservation enregistrée. (Email non envoyé : voir console / SendGrid Activity)");
+                                if (lblReservationMaquillage != null) {
+                                    lblReservationMaquillage.setText("Réservation enregistrée pour " + em + ". (Mail non envoyé)");
+                                }
+                                services.NotificationService.warn("Email non envoyé", "Vérifie SendGrid Email Activity + console.");
+                            }
+                        }
+                );
+
             } catch (java.sql.SQLException ex) {
                 if (lblMsg != null) lblMsg.setText("❌ Erreur enregistrement réservation.");
+                services.NotificationService.error("Erreur", "Erreur enregistrement réservation.");
                 ex.printStackTrace();
+                if (btnReserverMaquillage != null) btnReserverMaquillage.setDisable(false);
             }
         });
     }

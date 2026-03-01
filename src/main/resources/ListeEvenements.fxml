@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<StackPane prefHeight="650.0" prefWidth="900.0"
-           xmlns="http://javafx.com/javafx/21"
-           xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controllers.ListeEvenementsController"
-           stylesheets="@css/style.css"
-           styleClass="app-root">
+<StackPane fx:id="root" prefHeight="650.0" prefWidth="900.0" styleClass="app-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.ListeEvenementsController">
 
-    <ImageView fx:id="bgImage"
-               fitHeight="650.0"
-               fitWidth="900.0"
-               preserveRatio="false" />
+    <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />
 
     <Pane styleClass="bg-overlay" />
 
@@ -29,10 +33,7 @@
 
                 <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-card">
 
-                    <ImageView fx:id="imgLogo"
-                               fitHeight="58"
-                               fitWidth="58"
-                               preserveRatio="true" />
+                    <ImageView fx:id="imgLogo" fitHeight="58" fitWidth="58" preserveRatio="true" />
 
                     <VBox spacing="3">
                         <Label styleClass="title" text="Liste des Événements" />
@@ -41,27 +42,22 @@
 
                     <Pane HBox.hgrow="ALWAYS" />
 
-                    <HBox spacing="8" alignment="CENTER_RIGHT">
-                        <Label text="Mode:" styleClass="chip"/>
-                        <ChoiceBox fx:id="cbRole" prefWidth="130.0"/>
+                    <HBox alignment="CENTER_RIGHT" spacing="8">
+                        <!-- ✅ bouton thème -->
+                        <ToggleButton fx:id="btnTheme" onAction="#toggleTheme" styleClass="btn-secondary" text="🌙" />
+
+                        <Label styleClass="chip" text="Mode:" />
+                        <ChoiceBox fx:id="cbRole" prefWidth="130.0" />
                     </HBox>
 
                 </HBox>
 
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <TextField fx:id="txtSearch"
-                               promptText="Rechercher par titre / lieu / description..."
-                               HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="txtSearch" promptText="Rechercher par titre / lieu / description..." HBox.hgrow="ALWAYS" />
 
-                    <Button fx:id="btnRechercher"
-                            styleClass="btn-primary"
-                            text="Rechercher"
-                            onAction="#onSearch"/>
+                    <Button fx:id="btnRechercher" onAction="#onSearch" styleClass="btn-primary" text="Rechercher" />
 
-                    <Button fx:id="btnReset"
-                            styleClass="btn-secondary"
-                            text="Reset"
-                            onAction="#onReset"/>
+                    <Button fx:id="btnReset" onAction="#onReset" styleClass="btn-secondary" text="Reset" />
                 </HBox>
 
                 <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel">
@@ -73,10 +69,7 @@
 
                     <Pane HBox.hgrow="ALWAYS" />
 
-                    <Button fx:id="btnFiltrer"
-                            styleClass="btn-primary"
-                            text="Filtrer"
-                            onAction="#onFiltrer"/>
+                    <Button fx:id="btnFiltrer" onAction="#onFiltrer" styleClass="btn-primary" text="Filtrer" />
                 </HBox>
 
             </VBox>
@@ -88,33 +81,22 @@
                     <Insets top="18" />
                 </padding>
 
-                <ScrollPane fitToWidth="true"
-                            prefViewportHeight="420.0"
-                            styleClass="glass-scroll">
+                <ScrollPane fitToWidth="true" prefViewportHeight="420.0" styleClass="glass-scroll">
 
                     <content>
                         <VBox spacing="14">
                             <padding>
-                                <Insets bottom="10" left="10" right="10" top="10"/>
+                                <Insets bottom="10" left="10" right="10" top="10" />
                             </padding>
 
-                            <Label text="Résultats" styleClass="subtitle"/>
+                            <Label styleClass="subtitle" text="Résultats" />
 
-                            <FlowPane fx:id="flowEvents"
-                                      hgap="18"
-                                      vgap="18"
-                                      prefWrapLength="820"/>
+                            <FlowPane fx:id="flowEvents" hgap="18" prefWrapLength="820" vgap="18" />
 
-                            <!-- ✅ RECO (toujours visible) -->
-                            <VBox fx:id="boxReco" spacing="10" visible="true" managed="true">
-                                <Label fx:id="lblReco"
-                                       text="⭐ Recommandés pour vous"
-                                       styleClass="subtitle"/>
+                            <VBox fx:id="boxReco" managed="true" spacing="10" visible="true">
+                                <Label fx:id="lblReco" styleClass="subtitle" text="⭐ Recommandés pour vous" />
 
-                                <FlowPane fx:id="flowRecommended"
-                                          hgap="18"
-                                          vgap="18"
-                                          prefWrapLength="820"/>
+                                <FlowPane fx:id="flowRecommended" hgap="18" prefWrapLength="820" vgap="18" />
                             </VBox>
 
                         </VBox>
@@ -130,15 +112,9 @@
                     <Insets top="18" />
                 </padding>
 
-                <Button fx:id="btnSupprimer"
-                        styleClass="btn-danger"
-                        text="Supprimer"
-                        onAction="#onSupprimer"/>
+                <Button fx:id="btnSupprimer" onAction="#onSupprimer" styleClass="btn-secondary" stylesheets="@css/events-base.css" text="Supprimer" />
 
-                <Button fx:id="btnAjouterBottom"
-                        styleClass="btn-primary"
-                        text="Ajouter Événement"
-                        onAction="#onGoAjouter"/>
+                <Button fx:id="btnAjouterBottom" onAction="#onGoAjouter" styleClass="btn-secondary" stylesheets="@css/events-base.css" text="Ajouter Événement" />
             </HBox>
         </bottom>
 

@@ -1,0 +1,98 @@
+/* =========================
+   BASE IMPROVEMENTS
+   ========================= */
+
+/* chip theme-friendly */
+.chip{
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -chip-text;
+    -fx-background-color: -chip-bg;
+    -fx-background-radius: 999;
+    -fx-padding: 6 10;
+}
+
+/* header/panel use stronger glass */
+.header-card{
+    -fx-background-color: -glass-strong;
+    -fx-border-color: -stroke;
+    -fx-effect: dropshadow(gaussian, -shadow-strong, 28, 0.30, 0, 12);
+}
+.panel{
+    -fx-background-color: -glass;
+    -fx-border-color: -stroke;
+    -fx-effect: dropshadow(gaussian, -shadow-strong, 26, 0.30, 0, 10);
+}
+
+/* inputs theme-friendly */
+.text-field, .combo-box, .date-picker, .text-area, .choice-box{
+    -fx-background-color: -glass;
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: -muted;
+    -fx-border-color: transparent;
+}
+.text-field:focused, .combo-box:focused, .date-picker:focused, .text-area:focused, .choice-box:focused{
+    -fx-border-color: -focus;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.18), 18, 0.30, 0, 8);
+}
+
+/* buttons smoother */
+.btn-secondary{
+    -fx-background-color: -glass;
+    -fx-text-fill: -text;
+    -fx-border-color: -stroke;
+}
+.btn-secondary:hover{
+    -fx-background-color: -glass-strong;
+}
+
+/* event card theme-friendly */
+.event-card{
+    -fx-background-color: -card-bg;
+    -fx-border-color: -stroke;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-effect: dropshadow(gaussian, -shadow-strong, 26, 0.33, 0, 12);
+}
+.event-card:hover{
+    -fx-background-color: -card-hover;
+}
+.event-title{ -fx-text-fill: -text; }
+.event-type{ -fx-text-fill: -muted; }
+
+/* popup theme-friendly */
+.combo-box-popup .list-view{
+    -fx-background-color: -popup-bg;
+    -fx-border-color: -stroke;
+}
+.combo-box-popup .list-cell{
+    -fx-text-fill: -text;
+}
+.combo-box-popup .list-cell:hover{
+    -fx-background-color: -popup-hover;
+}
+.combo-box-popup .list-cell:filled:selected{
+    -fx-background-color: -popup-selected-bg;
+    -fx-text-fill: -popup-selected-text;
+}
+.date-picker-popup{
+    -fx-background-color: -popup-bg;
+    -fx-border-color: -stroke;
+}
+
+/* scrollbar theme-friendly */
+.scroll-bar:vertical .track, .scroll-bar:horizontal .track{
+    -fx-background-color: -scroll-track;
+}
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb{
+    -fx-background-color: -scroll-thumb;
+}
+.scroll-bar:vertical .thumb:hover, .scroll-bar:horizontal .thumb:hover{
+    -fx-background-color: -scroll-thumb-hover;
+}
+
+/* optional: nicer toggle */
+.toggle-button.btn-secondary:selected{
+    -fx-border-color: -primary;
+    -fx-border-width: 1.2;
+}
