@@ -6,47 +6,42 @@
 <?import javafx.scene.layout.*?>
 
 <StackPane fx:id="root"
-           prefHeight="650.0"
-           prefWidth="900.0"
+           prefWidth="900"
+           prefHeight="650"
            xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.ListeEvenementsController"
            styleClass="app-root">
 
-    <!-- Background image -->
+    <!-- Background -->
     <ImageView fx:id="bgImage"
-               fitHeight="650.0"
-               fitWidth="900.0"
+               fitWidth="900"
+               fitHeight="650"
                preserveRatio="false"/>
 
     <!-- Overlay -->
     <Pane styleClass="bg-overlay"/>
 
-    <!-- CONTENT (NO BIG SQUARE) -->
     <BorderPane>
+
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
 
-        <!-- ================= TOP ================= -->
+        <!-- ================= HEADER ================= -->
         <top>
             <VBox spacing="18">
 
-                <!-- Header -->
-                <HBox alignment="CENTER_LEFT"
-                      spacing="16"
-                      styleClass="header-card">
+                <HBox spacing="16" alignment="CENTER_LEFT" styleClass="header-card">
 
                     <ImageView fx:id="imgLogo"
-                               fitHeight="58"
-                               fitWidth="58"
+                               fitHeight="55"
+                               fitWidth="55"
                                preserveRatio="true"/>
 
-                    <VBox spacing="3">
-                        <Label text="Liste des Événements"
-                               styleClass="title"/>
-                        <Label fx:id="lblMsg"
-                               styleClass="subtitle"/>
+                    <VBox spacing="4">
+                        <Label text="Liste des Événements" styleClass="title"/>
+                        <Label fx:id="lblMsg" text="" styleClass="subtitle"/>
                     </VBox>
 
                     <Pane HBox.hgrow="ALWAYS"/>
@@ -56,44 +51,57 @@
                                   onAction="#toggleTheme"
                                   styleClass="btn-secondary"/>
 
-                    <Label text="Mode:"
-                           styleClass="chip"/>
-
-                    <ChoiceBox fx:id="cbRole"
-                               prefWidth="130"/>
+                    <Label text="Mode:" styleClass="chip"/>
+                    <ChoiceBox fx:id="cbRole" prefWidth="130"/>
                 </HBox>
 
-                <!-- Search -->
-                <HBox spacing="12">
-                    <TextField fx:id="txtSearch"
-                               promptText="Rechercher par titre / lieu / description..."
-                               HBox.hgrow="ALWAYS"/>
+                <!-- ================= SEARCH ================= -->
+                <HBox spacing="12" alignment="CENTER_LEFT">
 
-                    <Button fx:id="btnRechercher"
-                            text="Rechercher"
-                            styleClass="btn-primary"
-                            onAction="#onSearch"/>
+                    <StackPane HBox.hgrow="ALWAYS">
 
-                    <Button fx:id="btnReset"
-                            text="Reset"
-                            styleClass="btn-secondary"
-                            onAction="#onReset"/>
+                        <TextField fx:id="txtSearch"
+                                   promptText="Rechercher par titre / lieu / description..."
+                                   styleClass="search-field"/>
+
+                        <!-- 🔍 -->
+                        <Label text="🔍"
+                               styleClass="search-icon"
+                               StackPane.alignment="CENTER_RIGHT">
+                            <StackPane.margin>
+                                <Insets right="36"/>
+                            </StackPane.margin>
+                        </Label>
+
+                        <!-- ✕ -->
+                        <Button fx:id="btnClearSearch"
+                                text="✕"
+                                onAction="#onClearSearch"
+                                styleClass="search-clear"
+                                StackPane.alignment="CENTER_RIGHT">
+                            <StackPane.margin>
+                                <Insets right="10"/>
+                            </StackPane.margin>
+                        </Button>
+
+                    </StackPane>
+
                 </HBox>
 
-                <!-- Filters -->
-                <HBox spacing="12"
-                      styleClass="panel">
-                    <ComboBox fx:id="cbType" prefWidth="160"/>
-                    <ComboBox fx:id="cbSort" prefWidth="160"/>
-                    <DatePicker fx:id="dpFrom" prefWidth="160"/>
-                    <DatePicker fx:id="dpTo" prefWidth="160"/>
+                <!-- ================= FILTER ================= -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="panel">
+
+                    <ComboBox fx:id="cbType" prefWidth="170" promptText="Type"/>
+                    <ComboBox fx:id="cbSort" prefWidth="170" promptText="Trier par"/>
+                    <DatePicker fx:id="dpFrom" prefWidth="170"/>
+                    <DatePicker fx:id="dpTo" prefWidth="170"/>
 
                     <Pane HBox.hgrow="ALWAYS"/>
 
                     <Button fx:id="btnFiltrer"
                             text="Filtrer"
-                            styleClass="btn-primary"
-                            onAction="#onFiltrer"/>
+                            onAction="#onFiltrer"
+                            styleClass="btn-primary"/>
                 </HBox>
 
             </VBox>
@@ -102,52 +110,36 @@
         <!-- ================= CENTER ================= -->
         <center>
             <VBox spacing="10">
-                <Label text="Résultats"
-                       styleClass="subtitle"/>
 
-                <ScrollPane fitToWidth="true"
-                            VBox.vgrow="ALWAYS"
-                            styleClass="glass-scroll">
+                <Label text="Résultats" styleClass="subtitle"/>
+
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="glass-scroll">
 
                     <content>
-                        <VBox spacing="18">
-                            <FlowPane fx:id="flowEvents"
-                                      hgap="20"
-                                      vgap="20"
-                                      prefWrapLength="820"/>
-
-                            <VBox fx:id="boxReco"
-                                  spacing="10">
-                                <Label fx:id="lblReco"
-                                       text="⭐ Recommandés pour vous"
-                                       styleClass="subtitle"/>
-
-                                <FlowPane fx:id="flowRecommended"
-                                          hgap="20"
-                                          vgap="20"
-                                          prefWrapLength="820"/>
-                            </VBox>
-                        </VBox>
+                        <FlowPane fx:id="flowEvents"
+                                  hgap="20"
+                                  vgap="20"
+                                  prefWrapLength="820"/>
                     </content>
 
                 </ScrollPane>
+
             </VBox>
         </center>
 
         <!-- ================= BOTTOM ================= -->
         <bottom>
-            <HBox alignment="CENTER_RIGHT"
-                  spacing="14"
-                  styleClass="dock-bar">
+            <HBox spacing="14" alignment="CENTER_RIGHT" styleClass="dock-bar">
+
                 <Button fx:id="btnSupprimer"
                         text="Supprimer"
-                        styleClass="btn-danger"
-                        onAction="#onSupprimer"/>
+                        onAction="#onSupprimer"
+                        styleClass="btn-danger"/>
 
                 <Button fx:id="btnAjouterBottom"
                         text="Ajouter Événement"
-                        styleClass="btn-primary"
-                        onAction="#onGoAjouter"/>
+                        onAction="#onGoAjouter"
+                        styleClass="btn-primary"/>
             </HBox>
         </bottom>
 

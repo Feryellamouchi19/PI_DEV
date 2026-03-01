@@ -1,14 +1,18 @@
 package controllers;
 
 import entities.Evenement;
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import services.EvenementService;
 import services.FilterCriteria;
 import services.RecommendationService;
@@ -21,26 +25,25 @@ import java.util.stream.Collectors;
 
 public class ListeEvenementsController {
 
+    @FXML private StackPane root;
+
     @FXML private TextField txtSearch;
+    @FXML private Button btnClearSearch;
+
     @FXML private ComboBox<String> cbType;
     @FXML private ComboBox<String> cbSort;
     @FXML private DatePicker dpFrom;
     @FXML private DatePicker dpTo;
+
     @FXML private FlowPane flowEvents;
     @FXML private Label lblMsg;
 
-    @FXML private StackPane root;          // ✅ correspond au StackPane du FXML
-    @FXML private ToggleButton btnTheme;   // ✅ bouton thème
-
-    // ✅ Reco UI
+    // Reco UI
     @FXML private VBox boxReco;
     @FXML private Label lblReco;
     @FXML private FlowPane flowRecommended;
 
-    @FXML private Button btnRechercher;
-    @FXML private Button btnReset;
     @FXML private Button btnFiltrer;
-    @FXML private Button btnVoirDetails;
     @FXML private Button btnSupprimer;
     @FXML private Button btnAjouterBottom;
 
@@ -48,6 +51,7 @@ public class ListeEvenementsController {
     @FXML private ImageView imgLogo;
 
     @FXML private ChoiceBox<String> cbRole;
+    @FXML private ToggleButton btnTheme;
 
     private final EvenementService service = new EvenementService();
     private final RecommendationService recoService = new RecommendationService();
@@ -58,52 +62,78 @@ public class ListeEvenementsController {
 
     private EventCardController lastSelectedCard;
 
+    // Theme
+    private static final String CSS_BASE  = "/css/events-base.css";
+    private static final String CSS_DARK  = "/css/theme-dark.css";
+    private static final String CSS_LIGHT = "/css/theme-light.css";
+    private boolean darkMode = true;
+
+    // debounce for live search
+    private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(300));
+
     @FXML
     public void initialize() {
         SceneUtil.loadBackgroundImage(bgImage);
         SceneUtil.loadLogoImage(imgLogo);
 
-        // ✅ texte du bouton selon thème global
-        if (btnTheme != null) {
-            btnTheme.setText(SceneUtil.isDarkMode() ? "🌙" : "☀️");
-        }
-
-        if (cbType != null) {
-            cbType.getItems().setAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
-            cbType.setValue("TOUS");
-        }
-
-        if (cbSort != null) {
-            cbSort.getItems().setAll("Titre", "Date début", "Type", "Le plus vu");
-            cbSort.setValue("Titre");
-            cbSort.getSelectionModel().selectedItemProperty().addListener((o, ov, nv) -> {
-                if (lastDisplayedList != null && !lastDisplayedList.isEmpty()) {
-                    refreshCards(applySort(lastDisplayedList));
-                }
-            });
-        }
-
-        if (dpFrom != null) dpFrom.setValue(null);
-        if (dpTo != null) dpTo.setValue(null);
+        // Apply theme when scene exists
+        Platform.runLater(() -> {
+            if (root != null && root.getScene() != null) {
+                applyTheme(root.getScene(), true); // start dark
+            }
+        });
 
         initRoleChoiceBox();
         applyRoleUi();
 
-        if (btnRechercher != null) btnRechercher.setOnAction(e -> onSearch());
-        if (btnReset != null) btnReset.setOnAction(e -> onReset());
+        initFilters();
+        initLiveSearch();
+
         if (btnFiltrer != null) btnFiltrer.setOnAction(e -> onFiltrer());
-        if (btnVoirDetails != null) btnVoirDetails.setOnAction(e -> onVoirDetails());
         if (btnSupprimer != null) btnSupprimer.setOnAction(e -> onSupprimer());
         if (btnAjouterBottom != null) btnAjouterBottom.setOnAction(e -> onGoAjouter());
 
         loadFromDB();
+        PauseTransition pause = new PauseTransition(Duration.millis(300));
+
+        txtSearch.textProperty().addListener((obs, oldVal, newVal) -> {
+            btnClearSearch.setVisible(newVal != null && !newVal.isEmpty());
+            pause.setOnFinished(e -> onSearch());
+            pause.playFromStart();
+        });
+
     }
 
-    // ✅ Switch thème global (reste pour toutes les pages)
+    // ===================== THEME =====================
+
     @FXML
     private void toggleTheme() {
-        SceneUtil.setDarkMode(!SceneUtil.isDarkMode());
-        if (btnTheme != null) btnTheme.setText(SceneUtil.isDarkMode() ? "🌙" : "☀️");
+        if (root == null || root.getScene() == null) return;
+        applyTheme(root.getScene(), !darkMode);
+    }
+
+    private void applyTheme(Scene scene, boolean dark) {
+        if (scene == null) return;
+
+        scene.getStylesheets().removeIf(s ->
+                s.endsWith("theme-dark.css") ||
+                        s.endsWith("theme-light.css") ||
+                        s.endsWith("events-base.css"));
+
+        URL themeUrl = getClass().getResource(dark ? CSS_DARK : CSS_LIGHT);
+        URL baseUrl  = getClass().getResource(CSS_BASE);
+
+        if (themeUrl == null) throw new IllegalStateException("CSS introuvable: " + (dark ? CSS_DARK : CSS_LIGHT));
+        if (baseUrl  == null) throw new IllegalStateException("CSS introuvable: " + CSS_BASE);
+
+        scene.getStylesheets().add(themeUrl.toExternalForm());
+        scene.getStylesheets().add(baseUrl.toExternalForm());
+
+        darkMode = dark;
+
+        if (btnTheme != null) {
+            btnTheme.setText(darkMode ? "🌙" : "☀️");
+        }
     }
 
     // ===================== ROLE =====================
@@ -135,6 +165,55 @@ public class ListeEvenementsController {
             btnAjouterBottom.setVisible(admin);
             btnAjouterBottom.setManaged(admin);
         }
+    }
+
+    // ===================== FILTERS + SEARCH =====================
+
+    private void initFilters() {
+        if (cbType != null) {
+            cbType.getItems().setAll("TOUS", "SOIREE", "RANDONNEE", "CAMPING", "SEJOUR");
+            cbType.setValue("TOUS");
+        }
+
+        if (cbSort != null) {
+            cbSort.getItems().setAll("Titre", "Date début", "Type", "Le plus vu");
+            cbSort.setValue("Titre");
+            cbSort.getSelectionModel().selectedItemProperty().addListener((o, ov, nv) -> {
+                if (lastDisplayedList != null && !lastDisplayedList.isEmpty()) {
+                    refreshCards(applySort(lastDisplayedList));
+                }
+            });
+        }
+
+        if (dpFrom != null) dpFrom.setValue(null);
+        if (dpTo != null) dpTo.setValue(null);
+    }
+
+    private void initLiveSearch() {
+        if (txtSearch == null) return;
+
+        // clear button visibility
+        if (btnClearSearch != null) {
+            btnClearSearch.setVisible(false);
+            btnClearSearch.setManaged(false);
+        }
+
+        searchDebounce.setOnFinished(e -> onSearch());
+
+        txtSearch.textProperty().addListener((obs, oldVal, newVal) -> {
+            boolean hasText = newVal != null && !newVal.trim().isEmpty();
+            if (btnClearSearch != null) {
+                btnClearSearch.setVisible(hasText);
+                btnClearSearch.setManaged(hasText);
+            }
+            searchDebounce.playFromStart();
+        });
+    }
+
+    @FXML
+    private void onClearSearch() {
+        if (txtSearch != null) txtSearch.clear();
+        onSearch(); // refresh list
     }
 
     // ===================== DB =====================
@@ -256,6 +335,18 @@ public class ListeEvenementsController {
 
     // ===================== RECO =====================
 
+    private boolean hasAnyFilterApplied() {
+        boolean hasSearch = txtSearch != null && !safe(txtSearch.getText()).isBlank();
+
+        String type = cbType == null ? "TOUS" : cbType.getValue();
+        boolean hasType = type != null && !"TOUS".equalsIgnoreCase(type);
+
+        boolean hasFrom = dpFrom != null && dpFrom.getValue() != null;
+        boolean hasTo   = dpTo != null && dpTo.getValue() != null;
+
+        return hasSearch || hasType || hasFrom || hasTo;
+    }
+
     private void updateRecoVisibilityAndContent(List<Evenement> rec) {
         if (rec == null) rec = Collections.emptyList();
         if (boxReco != null) {
@@ -264,7 +355,9 @@ public class ListeEvenementsController {
         }
 
         if (rec.isEmpty()) {
-            if (lblReco != null) lblReco.setText("⭐ Recommandés pour vous (aucun)");
+            if (lblReco != null) lblReco.setText(hasAnyFilterApplied()
+                    ? "⭐ Recommandés pour vous (aucun)"
+                    : "⭐ Suggestions (événements à venir)");
             if (flowRecommended != null) flowRecommended.getChildren().clear();
         } else {
             refreshRecommended(rec);
@@ -280,55 +373,38 @@ public class ListeEvenementsController {
 
     // ===================== ACTIONS =====================
 
-    @FXML private void onGoAjouter() { SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Événement"); }
-
     @FXML
-    private void onVoirDetails() {
-        if (selected == null) {
-            if (lblMsg != null) lblMsg.setText("⚠️ Sélectionnez un événement.");
-            return;
-        }
-        SceneUtil.switchToWithData("/DetailsEvenement.fxml", "Détails Événement", selected.getIdEvent());
-    }
-
-    @FXML
-    private void onReset() {
-        if (txtSearch != null) txtSearch.clear();
-        if (cbType != null) cbType.setValue("TOUS");
-        if (cbSort != null) cbSort.setValue("Titre");
-        if (dpFrom != null) dpFrom.setValue(null);
-        if (dpTo != null) dpTo.setValue(null);
-
-        refreshCards(applySort(all));
-        updateRecoAfterLoad();
-
-        if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
+    private void onGoAjouter() {
+        SceneUtil.switchTo("/AjouterEvenement.fxml", "Ajouter Événement");
     }
 
     @FXML
     private void onSearch() {
-        String q = safe(txtSearch.getText()).toLowerCase(Locale.ROOT);
+        String q = safe(txtSearch != null ? txtSearch.getText() : "").toLowerCase(Locale.ROOT);
 
+        List<Evenement> filtered;
         if (q.isEmpty()) {
-            refreshCards(applySort(all));
-            updateRecoAfterLoad();
-            if (lblMsg != null) lblMsg.setText("✓ " + all.size() + " événement(s)");
-            return;
+            filtered = new ArrayList<>(all);
+        } else {
+            filtered = all.stream()
+                    .filter(e ->
+                            safe(e.getTitre()).toLowerCase(Locale.ROOT).contains(q)
+                                    || safe(e.getLieu()).toLowerCase(Locale.ROOT).contains(q)
+                                    || safe(e.getDescription()).toLowerCase(Locale.ROOT).contains(q)
+                    )
+                    .collect(Collectors.toList());
         }
 
-        List<Evenement> filtered = all.stream()
-                .filter(e ->
-                        safe(e.getTitre()).toLowerCase(Locale.ROOT).contains(q)
-                                || safe(e.getLieu()).toLowerCase(Locale.ROOT).contains(q)
-                                || safe(e.getDescription()).toLowerCase(Locale.ROOT).contains(q)
-                )
-                .collect(Collectors.toList());
+        // Apply current filters too (type/date) when typing
+        filtered = applyCurrentTypeAndDateFilters(filtered);
 
         refreshCards(applySort(filtered));
-        if (lblMsg != null) lblMsg.setText("✓ Résultats: " + filtered.size());
+        if (lblMsg != null) lblMsg.setText(q.isEmpty()
+                ? "✓ " + filtered.size() + " événement(s)"
+                : "✓ Résultats: " + filtered.size());
 
         FilterCriteria c = new FilterCriteria();
-        c.setKeyword(safe(txtSearch.getText()));
+        c.setKeyword(safe(txtSearch != null ? txtSearch.getText() : ""));
         c.setType(cbType == null ? "TOUS" : cbType.getValue());
         if (dpFrom != null && dpFrom.getValue() != null) c.setDateFrom(dpFrom.getValue().atStartOfDay());
         if (dpTo != null && dpTo.getValue() != null) c.setDateTo(dpTo.getValue().atTime(23, 59, 59));
@@ -339,41 +415,8 @@ public class ListeEvenementsController {
 
     @FXML
     private void onFiltrer() {
-        List<Evenement> tmp = getCurrentFiltered();
-
-        String type = (cbType == null) ? "TOUS" : cbType.getValue();
-        if (type != null && !"TOUS".equalsIgnoreCase(type)) {
-            tmp = tmp.stream()
-                    .filter(e -> type.equalsIgnoreCase(safe(e.getType())))
-                    .collect(Collectors.toList());
-        }
-
-        LocalDate from = (dpFrom == null) ? null : dpFrom.getValue();
-        LocalDate to   = (dpTo == null) ? null : dpTo.getValue();
-
-        if (from != null) {
-            tmp = tmp.stream()
-                    .filter(e -> e.getDateDebut() != null && !e.getDateDebut().toLocalDate().isBefore(from))
-                    .collect(Collectors.toList());
-        }
-
-        if (to != null) {
-            tmp = tmp.stream()
-                    .filter(e -> e.getDateDebut() != null && !e.getDateDebut().toLocalDate().isAfter(to))
-                    .collect(Collectors.toList());
-        }
-
-        refreshCards(applySort(tmp));
-        if (lblMsg != null) lblMsg.setText("✓ filtré: " + tmp.size());
-
-        FilterCriteria c = new FilterCriteria();
-        c.setType(type);
-        c.setKeyword(safe(txtSearch.getText()));
-        if (from != null) c.setDateFrom(from.atStartOfDay());
-        if (to != null) c.setDateTo(to.atTime(23, 59, 59));
-
-        List<Evenement> rec = recoService.recommendFromFilter(c, all, tmp, 6);
-        updateRecoVisibilityAndContent(rec);
+        // when user hits "Filtrer", we apply filters AND current search text
+        onSearch();
     }
 
     @FXML
@@ -409,8 +452,36 @@ public class ListeEvenementsController {
 
     // ===================== HELPERS =====================
 
+    private List<Evenement> applyCurrentTypeAndDateFilters(List<Evenement> base) {
+        List<Evenement> tmp = new ArrayList<>(base);
+
+        String type = cbType == null ? "TOUS" : cbType.getValue();
+        if (type != null && !"TOUS".equalsIgnoreCase(type)) {
+            tmp = tmp.stream()
+                    .filter(e -> type.equalsIgnoreCase(safe(e.getType())))
+                    .collect(Collectors.toList());
+        }
+
+        LocalDate from = dpFrom == null ? null : dpFrom.getValue();
+        LocalDate to   = dpTo == null ? null : dpTo.getValue();
+
+        if (from != null) {
+            tmp = tmp.stream()
+                    .filter(e -> e.getDateDebut() != null && !e.getDateDebut().toLocalDate().isBefore(from))
+                    .collect(Collectors.toList());
+        }
+        if (to != null) {
+            tmp = tmp.stream()
+                    .filter(e -> e.getDateDebut() != null && !e.getDateDebut().toLocalDate().isAfter(to))
+                    .collect(Collectors.toList());
+        }
+
+        return tmp;
+    }
+
     private List<Evenement> applySort(List<Evenement> list) {
         if (list == null) return List.of();
+
         String sort = cbSort == null ? "Titre" : cbSort.getValue();
         if (sort == null) sort = "Titre";
 
@@ -425,18 +496,8 @@ public class ListeEvenementsController {
         return sorted;
     }
 
-    private List<Evenement> getCurrentFiltered() {
-        String q = safe(txtSearch.getText()).toLowerCase(Locale.ROOT);
-        if (q.isEmpty()) return new ArrayList<>(all);
-
-        return all.stream()
-                .filter(e ->
-                        safe(e.getTitre()).toLowerCase(Locale.ROOT).contains(q)
-                                || safe(e.getLieu()).toLowerCase(Locale.ROOT).contains(q)
-                                || safe(e.getDescription()).toLowerCase(Locale.ROOT).contains(q)
-                )
-                .collect(Collectors.toList());
+    private String safe(String s) {
+        return s == null ? "" : s.trim();
     }
 
-    private String safe(String s) { return s == null ? "" : s.trim(); }
 }
