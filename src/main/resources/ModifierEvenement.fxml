@@ -9,7 +9,6 @@
            xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.ModifierEvenementController"
-           stylesheets="@css/style.css"
            styleClass="app-root">
 
     <ImageView fx:id="bgImage" fitHeight="650.0" fitWidth="900.0" preserveRatio="false" />

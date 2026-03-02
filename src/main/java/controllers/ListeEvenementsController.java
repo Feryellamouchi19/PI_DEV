@@ -108,8 +108,13 @@ public class ListeEvenementsController {
 
     @FXML
     private void toggleTheme() {
-        if (root == null || root.getScene() == null) return;
-        applyTheme(root.getScene(), !darkMode);
+        utils.ThemeManager.toggle();
+        if (root != null && root.getScene() != null) {
+            utils.ThemeManager.apply(root.getScene());
+        }
+        if (btnTheme != null) {
+            btnTheme.setText(utils.ThemeManager.getTheme() == utils.ThemeManager.Theme.DARK ? "🌙" : "☀️");
+        }
     }
 
     private void applyTheme(Scene scene, boolean dark) {
