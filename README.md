@@ -74,7 +74,7 @@ PIDEV – 3rd Year Engineering Program | 2025–2026
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repository-link.git
+git clone https://github.com/Feryellamouchi19/PI_DEV
 ```
 
 2. Open the project using **IntelliJ IDEA**.
