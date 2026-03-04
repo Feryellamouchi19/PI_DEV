@@ -1,37 +1,96 @@
-Module : Gestion des Événements
-Description
+# Event Management Module – PI_DEV
 
-Le module Gestion des Événements permet aux administrateurs de créer et gérer les événements de la plateforme.
-Il offre les fonctionnalités nécessaires pour organiser des activités, consulter les événements existants et gérer leurs informations.
+## Overview
 
-Ce module a été développé en JavaFX avec FXML et suit une architecture basée sur Controllers, Services et Entities pour séparer l’interface utilisateur de la logique métier.
+This module was developed as part of the **PIDEV – 3rd Year Engineering Program at Esprit School of Engineering (Academic Year 2025–2026)**.
 
-Fonctionnalités
+The **Event Management Module** allows administrators to create, manage, and organize events within the platform.
+It provides an intuitive interface for managing event details, schedules, and event-related information.
 
-Ajouter un événement
+The module is implemented as a **desktop application using JavaFX**, following a layered architecture that separates the user interface, business logic, and data access.
 
-Modifier un événement
+## Features
 
-Supprimer un événement
+* Create new events
+* Modify existing events
+* Delete events
+* Display the list of events
+* View event details
+* Add programs/schedules to events
+* Generate event posters using AI
+* User-friendly graphical interface
 
-Afficher la liste des événements
+## Tech Stack
 
-Consulter les détails d’un événement
+### Frontend
 
-Ajouter un programme à un événement
+* JavaFX
+* FXML
+* Scene Builder
+* CSS
 
-Génération automatique d’une affiche d’événement via IA
+### Backend
 
-Interface graphique moderne avec JavaFX
+* Java
+* MySQL
+* Maven
 
-Technologies utilisées
+## Architecture
 
-Java
+The module follows a **3-layer architecture**:
 
-JavaFX
+* **Presentation Layer**
 
-FXML (Scene Builder)
+  * JavaFX interfaces (FXML)
+  * Controllers handling user interactions
 
-MySQL
+* **Business Logic Layer**
 
-Maven
+  * Services managing application logic
+
+* **Data Layer**
+
+  * Entities representing the data model
+  * Database access through services
+
+Main components include:
+
+* `Evenement` entity
+* `Programme` entity
+* Controllers for event management
+* Services handling CRUD operations
+
+## Contributors
+
+* **Feryel Lamouchi** – Event Management Module
+
+## Academic Context
+
+Developed at **Esprit School of Engineering – Tunisia**
+PIDEV – 3rd Year Engineering Program | 2025–2026
+
+## Getting Started
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-repository-link.git
+```
+
+2. Open the project using **IntelliJ IDEA**.
+
+3. Install Maven dependencies:
+
+```bash
+mvn clean install
+```
+
+4. Run the application:
+
+```bash
+mvn javafx:run
+```
+
+## Acknowledgments
+
+This project was developed as part of the **PIDEV academic project** at Esprit School of Engineering.
