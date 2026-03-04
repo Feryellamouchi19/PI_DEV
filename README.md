@@ -21,16 +21,10 @@ The module is implemented as a **desktop application using JavaFX**, following a
 * User-friendly graphical interface
 
 ## Tech Stack
-
-### Frontend
-
 * JavaFX
 * FXML
 * Scene Builder
 * CSS
-
-### Backend
-
 * Java
 * MySQL
 * Maven
